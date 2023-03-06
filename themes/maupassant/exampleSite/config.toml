@@ -1,8 +1,7 @@
-baseURL = "https://YuMars.github.io"
+baseURL = "https://www.flysnow.org"
 languageCode = "zh-CN"
-title = "YuMars的博客"
+title = "飞雪无情的博客"
 theme = "maupassant"
-publishDir = "docs"
 googleAnalytics = ""  # UA-XXXXXXXX-X/G-XXXXXXXXXX
 
 ## 保持分类的原始名字（false会做转小写处理）
@@ -16,13 +15,13 @@ summaryLength = 140
 disqusShortname = "yourdiscussshortname"  ## 是否开启disqus评论，不要和utteranc同时开启
 
 [author]
-  name = "YuMars"
+  name = "飞雪无情"
 
 [params]
-  author = "YuMars"
-  subtitle = "不拔之志"
-  keywords = "Swift,Objective-C,博客,项目管理"
-  description = "IT互联网，包括但不限于Swift语言(golang)、Java、项目管理、抖音分析、软件架构等"
+  author = "飞雪无情"
+  subtitle = "专注于Android、Java、Go语言(golang)、移动互联网、项目管理、软件架构"
+  keywords = "golang,go语言,go语言笔记,飞雪无情,java,android,博客,项目管理,python,软件架构,公众号,小程序"
+  description = "专注于IT互联网，包括但不限于Go语言(golang)、Java、Android、Python、项目管理、抖音分析、软件架构等"
   busuanzi = true #启用不算子网页统计
   googleAd = ""  #ca-pub-xxxxxxxxxxxxxx
   localSearch = true # 启用本地搜索
@@ -39,9 +38,9 @@ disqusShortname = "yourdiscussshortname"  ## 是否开启disqus评论，不要�
 ## 友情链接，可以多个
 
 [[params.links]]
-  title = "链接Title"
-  name = "链接Name"
-  url = "https://www.baidu.com/"
+  title = "飞雪无情的博客"
+  name = "飞雪无情的博客"
+  url = "https://www.flysnow.org/"
 
 [[params.links]]
   title = "Android Gradle权威指南"
@@ -49,18 +48,18 @@ disqusShortname = "yourdiscussshortname"  ## 是否开启disqus评论，不要�
   url = "http://yuedu.baidu.com/ebook/14a722970740be1e640e9a3e"
 
 ## 侧边栏广告位
-#[[params.ads]]
-  #title = "【2019双12】ALL IN CLoud 低至1折"
-  #url = "https://www.aliyun.com/minisite/goods?userCode=jdg9oj97&share_source=copy_link"
-  #img = "https://img.alicdn.com/tfs/TB1_rYHo7P2gK0jSZPxXXacQpXa-690-388.jpg"
-#[[params.ads]]
-  #title = "助力产业智慧升级，云服务器首年88元起，更有千元代金券礼包免费领！"
-  #url = "https://cloud.tencent.com/act/cps/redirect?redirect=1048&cps_key=14ff722692ac784fa8c3301c8c28d924&from=console"
-  #img = "https://upload-dianshi-1255598498.file.myqcloud.com/345-7c71532bd4935fbdd9a67c1a71e577b1767b805c.200%E7%89%88%E6%9C%ACB.jpg"
-#[[params.ads]]
-  #title = "【渠道专享低折扣】11月特惠 限时2折"
-  #url = "https://www.aliyun.com/acts/limit-buy?userCode=jdg9oj97"
-  #img = "https://img.alicdn.com/tfs/TB1hblJl7Y2gK0jSZFgXXc5OFXa-750-400.jpg"
+[[params.ads]]
+  title = "【2019双12】ALL IN CLoud 低至1折"
+  url = "https://www.aliyun.com/minisite/goods?userCode=jdg9oj97&share_source=copy_link"
+  img = "https://img.alicdn.com/tfs/TB1_rYHo7P2gK0jSZPxXXacQpXa-690-388.jpg"
+[[params.ads]]
+  title = "助力产业智慧升级，云服务器首年88元起，更有千元代金券礼包免费领！"
+  url = "https://cloud.tencent.com/act/cps/redirect?redirect=1048&cps_key=14ff722692ac784fa8c3301c8c28d924&from=console"
+  img = "https://upload-dianshi-1255598498.file.myqcloud.com/345-7c71532bd4935fbdd9a67c1a71e577b1767b805c.200%E7%89%88%E6%9C%ACB.jpg"
+[[params.ads]]
+  title = "【渠道专享低折扣】11月特惠 限时2折"
+  url = "https://www.aliyun.com/acts/limit-buy?userCode=jdg9oj97"
+  img = "https://img.alicdn.com/tfs/TB1hblJl7Y2gK0jSZFgXXc5OFXa-750-400.jpg"
 
 ## 配置 utteranc评论,教程参考 https://utteranc.es/
 [params.utteranc]
@@ -87,12 +86,6 @@ disqusShortname = "yourdiscussshortname"  ## 是否开启disqus评论，不要�
 ## 配置网站菜单
 
 [menu]
-
-   [[menu.main]]
-	  identifier = "test"
-	  name = "测试"
-	  url = "/test/"
-	  weight = 1
 
   [[menu.main]]
     identifier = "tools"

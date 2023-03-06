@@ -2,13 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://YuMars.github.io/post/</loc>
+    <lastmod>2023-03-06T15:42:36+08:00</lastmod>
+  </url><url>
+    <loc>https://YuMars.github.io/</loc>
+    <lastmod>2023-03-06T15:42:36+08:00</lastmod>
+  </url><url>
+    <loc>https://YuMars.github.io/post/first/</loc>
+    <lastmod>2023-03-06T15:42:36+08:00</lastmod>
+  </url><url>
     <loc>https://YuMars.github.io/archives/</loc>
     <lastmod>2023-03-06T14:52:25+08:00</lastmod>
   </url><url>
     <loc>https://YuMars.github.io/categories/</loc>
   </url><url>
     <loc>https://YuMars.github.io/tags/</loc>
-  </url><url>
-    <loc>https://YuMars.github.io/</loc>
   </url>
 </urlset>
