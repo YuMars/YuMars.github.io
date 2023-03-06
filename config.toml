@@ -1,7 +1,8 @@
-baseURL = "YuMars.github.io"
+baseURL = "https://YuMars.github.io"
 languageCode = "zh-CN"
 title = "YuMars的博客"
 theme = "maupassant"
+publishDir = "docs"
 googleAnalytics = ""  # UA-XXXXXXXX-X/G-XXXXXXXXXX
 
 ## 保持分类的原始名字（false会做转小写处理）

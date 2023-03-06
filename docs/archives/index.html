@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    
+
+    <title>Archives | YuMars的博客</title>
+    <meta property="og:title" content="Archives - YuMars的博客">
+    <meta property="og:type" content="article">
+        
+    <meta property="article:published_time" content='2023-03-06T14:52:25&#43;08:00'>
+        
+        
+    <meta property="article:modified_time" content='2023-03-06T14:52:25&#43;08:00'>
+        
+    <meta name="Keywords" content="Swift,Objective-C,博客,项目管理">
+    <meta name="description" content="Archives">
+        
+    <meta name="author" content="YuMars">
+    <meta property="og:url" content="https://YuMars.github.io/archives/">
+    <link rel="shortcut icon" href='/favicon.ico'  type="image/x-icon">
+
+    <link rel="stylesheet" href='/css/normalize.css'>
+    <link rel="stylesheet" href='/css/style.css'>
+    <script type="text/javascript" src="//cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    
+    
+    
+    
+    
+    
+        <link rel="stylesheet" href='/css/douban.css'>
+    
+        <link rel="stylesheet" href='/css/other.css'>
+    
+</head>
+
+<body>
+    <header id="header" class="clearfix">
+    <div class="container">
+        <div class="col-group">
+            <div class="site-name ">
+                
+                    <a id="logo" href="https://YuMars.github.io">
+                        YuMars的博客
+                    </a>
+                
+                <p class="description">子标题</p>
+            </div>
+            <div>
+                <nav id="nav-menu" class="clearfix">
+                    <a class="" href="https://YuMars.github.io">Home</a>
+                    
+                    <a  href="https://YuMars.github.io/tools/" title="工具">工具</a>
+                    
+                    <a class="current" href="https://YuMars.github.io/archives/" title="归档">归档</a>
+                    
+                    <a  href="https://YuMars.github.io/about/" title="关于">关于</a>
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+    <div id="body">
+        <div class="container">
+            <div class="col-group">
+
+                <div class="col-8" id="main">
+                    
+<div class="res-cons">
+    <style type="text/css">
+    .post-toc {
+        position: fixed;
+        width: 200px;
+        margin-left: -210px;
+        padding: 5px 10px;
+        font-family: Athelas, STHeiti, Microsoft Yahei, serif;
+        font-size: 12px;
+        border: 1px solid rgba(0, 0, 0, .07);
+        border-radius: 5px;
+        background-color: rgba(255, 255, 255, 0.98);
+        background-clip: padding-box;
+        -webkit-box-shadow: 1px 1px 2px rgba(0, 0, 0, .125);
+        box-shadow: 1px 1px 2px rgba(0, 0, 0, .125);
+        word-wrap: break-word;
+        white-space: nowrap;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        z-index: 999;
+        cursor: pointer;
+        max-height: 70%;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .post-toc .post-toc-title {
+        width: 100%;
+        margin: 0 auto;
+        font-size: 20px;
+        font-weight: 400;
+        text-transform: uppercase;
+        text-align: center;
+    }
+
+    .post-toc .post-toc-content {
+        font-size: 15px;
+    }
+
+    .post-toc .post-toc-content>nav>ul {
+        margin: 10px 0;
+    }
+
+    .post-toc .post-toc-content ul {
+        padding-left: 20px;
+        list-style: square;
+        margin: 0.5em;
+        line-height: 1.8em;
+    }
+
+    .post-toc .post-toc-content ul ul {
+        padding-left: 15px;
+        display: none;
+    }
+
+    @media print,
+    screen and (max-width:1057px) {
+        .post-toc {
+            display: none;
+        }
+    }
+</style>
+<div class="post-toc" style="position: absolute; top: 188px;">
+    <h2 class="post-toc-title">Table of Contents</h2>
+    <div class="post-toc-content">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#用户需要上传和下载一个重要的资料文件应该如何判断用户本次是否上传成功和下载成功了">用户需要上传和下载一个重要的资料文件，应该如何判断用户本次是否上传成功和下载成功了?</a></li>
+    <li><a href="#reactivecocoarac如何防止uibutton短时间内多次重复点击大概思路">ReactiveCocoa(RAC)如何防止UIButton短时间内多次重复点击，大概思路?</a></li>
+    <li><a href="#倒计时如何实现-">倒计时如何实现 ？</a></li>
+    <li><a href="#熟悉cocoapods么能大概讲一下工作原理么">熟悉CocoaPods么？能大概讲一下工作原理么？</a>
+      <ul>
+        <li><a href="#cocoapods原理"><strong>CocoaPods原理</strong></a></li>
+      </ul>
+    </li>
+    <li><a href="#使用sdwebimage内存爆涨的问题">使用SDWebImage内存爆涨的问题</a></li>
+    <li><a href="#isa指针的作用">isa指针的作用</a></li>
+    <li><a href="#测试都有哪些方式优缺点呢">测试都有哪些方式?优缺点呢</a></li>
+    <li><a href="#xcode8开始后自动配置开发证书过程">Xcode8开始后自动配置开发证书过程?</a></li>
+    <li><a href="#项目中的图片上传功能如何实现为什么使用队列上传为什么不用异步上传">项目中的图片上传功能如何实现，为什么使用队列上传，为什么不用异步上传</a></li>
+    <li><a href="#项目中你是怎么处理网络速度慢中断抖动等网络请求中的问题">项目中你是怎么处理网络速度慢、中断抖动等网络请求中的问题?</a>
+      <ul>
+        <li><a href="#觉得整理的蛮不错可以赞赏一下旺仔收集整理不易且赞且珍惜">觉得整理的蛮不错，可以赞赏一下旺仔(收集整理不易，且赞且珍惜)</a></li>
+      </ul>
+    </li>
+    <li><a href="#链接">链接</a></li>
+  </ul>
+</nav>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var postToc = $(".post-toc");
+        if (postToc.length) {
+            var leftPos = $("#main").offset().left;
+            if (leftPos < 220) {
+                postToc.css({ "width": leftPos - 10, "margin-left": (0 - leftPos) })
+            }
+
+            var t = postToc.offset().top - 20,
+                a = {
+                    start: {
+                        position: "absolute",
+                        top: t
+                    },
+                    process: {
+                        position: "fixed",
+                        top: 20
+                    },
+                };
+            $(window).scroll(function () {
+                var e = $(window).scrollTop();
+                e < t ? postToc.css(a.start) : postToc.css(a.process)
+            })
+        }
+
+        if ($("#TableOfContents").children().length < 1) {
+            $(".post-toc").remove();
+        }
+    })
+</script>
+    <article class="post">
+        <header>
+            <h1 class="post-title">Archives</h1>
+        </header>
+        
+  <time datetime="2023-03-06T06:52:25Z" class="post-meta meta-date dt-published">
+    2023-03-06
+  </time>
+
+
+
+        
+        <div class="post-meta">
+            <span id="busuanzi_container_page_pv">&nbsp;|
+                <span id="busuanzi_value_page_pv"></span> <span>reads</span>
+            </span>
+        </div>
+        
+        
+        <div class="post-content">
+            <h1 id="interview-ios---4">interview-iOS - 4</h1>
+<ul>
+<li><a href="#%E7%94%A8%E6%88%B7%E9%9C%80%E8%A6%81%E4%B8%8A%E4%BC%A0%E5%92%8C%E4%B8%8B%E8%BD%BD%E4%B8%80%E4%B8%AA%E9%87%8D%E8%A6%81%E7%9A%84%E8%B5%84%E6%96%99%E6%96%87%E4%BB%B6%E5%BA%94%E8%AF%A5%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E7%94%A8%E6%88%B7%E6%9C%AC%E6%AC%A1%E6%98%AF%E5%90%A6%E4%B8%8A%E4%BC%A0%E6%88%90%E5%8A%9F%E5%92%8C%E4%B8%8B%E8%BD%BD%E6%88%90%E5%8A%9F%E4%BA%86">用户需要上传和下载一个重要的资料文件，应该如何判断用户本次是否上传成功和下载成功了?</a></li>
+<li><a href="#reactivecocoarac%E5%A6%82%E4%BD%95%E9%98%B2%E6%AD%A2uibutton%E7%9F%AD%E6%97%B6%E9%97%B4%E5%86%85%E5%A4%9A%E6%AC%A1%E9%87%8D%E5%A4%8D%E7%82%B9%E5%87%BB%E5%A4%A7%E6%A6%82%E6%80%9D%E8%B7%AF">ReactiveCocoa(RAC)如何防止UIButton短时间内多次重复点击，大概思路?</a></li>
+<li><a href="#%E5%80%92%E8%AE%A1%E6%97%B6%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0">倒计时如何实现 ？</a></li>
+<li><a href="#%E7%86%9F%E6%82%89cocoapods%E4%B9%88%E8%83%BD%E5%A4%A7%E6%A6%82%E8%AE%B2%E4%B8%80%E4%B8%8B%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%E4%B9%88">熟悉CocoaPods么？能大概讲一下工作原理么？</a></li>
+<li><a href="#%E4%BD%BF%E7%94%A8sdwebimage%E5%86%85%E5%AD%98%E7%88%86%E6%B6%A8%E7%9A%84%E9%97%AE%E9%A2%98">使用SDWebImage内存爆涨的问题</a></li>
+<li><a href="#isa%E6%8C%87%E9%92%88%E7%9A%84%E4%BD%9C%E7%94%A8">isa指针的作用</a></li>
+<li><a href="#%E6%B5%8B%E8%AF%95%E9%83%BD%E6%9C%89%E5%93%AA%E4%BA%9B%E6%96%B9%E5%BC%8F%E4%BC%98%E7%BC%BA%E7%82%B9%E5%91%A2">测试都有哪些方式?优缺点呢</a></li>
+<li><a href="#xcode8%E5%BC%80%E5%A7%8B%E5%90%8E%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE%E5%BC%80%E5%8F%91%E8%AF%81%E4%B9%A6%E8%BF%87%E7%A8%8B">Xcode8开始后自动配置开发证书过程?</a></li>
+<li><a href="#%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84%E5%9B%BE%E7%89%87%E4%B8%8A%E4%BC%A0%E5%8A%9F%E8%83%BD%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8%E9%98%9F%E5%88%97%E4%B8%8A%E4%BC%A0%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E7%94%A8%E5%BC%82%E6%AD%A5%E4%B8%8A%E4%BC%A0">项目中的图片上传功能如何实现，为什么使用队列上传，为什么不用异步上传</a></li>
+<li><a href="#%E9%A1%B9%E7%9B%AE%E4%B8%AD%E4%BD%A0%E6%98%AF%E6%80%8E%E4%B9%88%E5%A4%84%E7%90%86%E7%BD%91%E7%BB%9C%E9%80%9F%E5%BA%A6%E6%85%A2%E4%B8%AD%E6%96%AD%E6%8A%96%E5%8A%A8%E7%AD%89%E7%BD%91%E7%BB%9C%E8%AF%B7%E6%B1%82%E4%B8%AD%E7%9A%84%E9%97%AE%E9%A2%98">项目中你是怎么处理网络速度慢、中断抖动等网络请求中的问题?</a></li>
+</ul>
+<h2 id="用户需要上传和下载一个重要的资料文件应该如何判断用户本次是否上传成功和下载成功了">用户需要上传和下载一个重要的资料文件，应该如何判断用户本次是否上传成功和下载成功了?</h2>
+<!-- raw HTML omitted -->
+<ul>
+<li>用MD5验证文件的完整性！(仅仅通过代码来判断当前次的请求发送结束或者收到数据结束不可以的)</li>
+<li>当客户端上传一个文件的时候，在请求body里面添加该文件的MD5值来告诉服务器，服务器接受文件完毕以后通过校验收到的文件的MD5值与请求body里面的MD5值来最终确定本次上传是否成功</li>
+<li>当客户端下载一个文件的时候，在响应头里面收到了服务器附带的该文件的MD5值，文件下载结束以后，通过获取下载后文件的MD5值与本次请求服务器返回的响应头中的MD5值做一个比较，来最终判断本次下载是否成功</li>
+<li>MD5，是一个将任意长度的数据字符串转化成短的固定长度的值的单向操作。任意两个字符串不应有相同的散列值</li>
+<li>MD5校验可以应用在多个领域，比如说机密资料的检验，下载文件的检验，明文密码的加密等。MD5校验原理举例：如客户往我们数据中心同步一个文件，该文件使用MD5校验，那么客户在发送文件的同时会再发一个存有校验码的文件，我们拿到该文件后做MD5运算，得到的计算结果与客户发送的校验码相比较，如果一致则认为客户发送的文件没有出错，否则认为文件出错需要重新发送。</li>
+</ul>
+<!-- raw HTML omitted -->
+<h2 id="reactivecocoarac如何防止uibutton短时间内多次重复点击大概思路">ReactiveCocoa(RAC)如何防止UIButton短时间内多次重复点击，大概思路?</h2>
+<blockquote>
+<p>需要有RAC使用经验才可问此题</p>
+</blockquote>
+<!-- raw HTML omitted -->
+<ul>
+<li>
+<p>建立一个<code>flag</code>或者使用 <code>filter</code></p>
+</li>
+<li>
+<p>事件完成 flag重置，否则一直skip或者filter (某个RAC群友抛砖引玉)</p>
+</li>
+</ul>
+<!-- raw HTML omitted -->
+<h2 id="倒计时如何实现-">倒计时如何实现 ？</h2>
+<!-- raw HTML omitted -->
+<ul>
+<li>NSTimer ,精度不一定准确</li>
+<li>GCD</li>
+<li>DisplayLink</li>
+<li>RAC</li>
+</ul>
+<div class="highlight"><div style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-objc" data-lang="objc"><span style="display:flex;"><span>-(<span style="color:#458;font-weight:bold">void</span>)<span style="color:#900;font-weight:bold">startTime</span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">__block</span> <span style="color:#458;font-weight:bold">int</span> timeout<span style="color:#000;font-weight:bold">=</span><span style="color:#099">30</span>; <span style="color:#998;font-style:italic">//倒计时时间
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>    dispatch_queue_t queue <span style="color:#000;font-weight:bold">=</span> dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, <span style="color:#099">0</span>);
+</span></span><span style="display:flex;"><span>    dispatch_source_t _timer <span style="color:#000;font-weight:bold">=</span> dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, <span style="color:#099">0</span>, <span style="color:#099">0</span>,queue);
+</span></span><span style="display:flex;"><span>    dispatch_source_set_timer(_timer,dispatch_walltime(<span style="color:#0086b3">NULL</span>, <span style="color:#099">0</span>),<span style="color:#099">1.0</span><span style="color:#000;font-weight:bold">*</span>NSEC_PER_SEC, <span style="color:#099">0</span>); <span style="color:#998;font-style:italic">//每秒执行
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>    dispatch_source_set_event_handler(_timer, <span style="color:#000;font-weight:bold">^</span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">if</span>(timeout<span style="color:#000;font-weight:bold">&lt;=</span><span style="color:#099">0</span>){ <span style="color:#998;font-style:italic">//倒计时结束，关闭
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>            dispatch_source_cancel(_timer);
+</span></span><span style="display:flex;"><span>            dispatch_async(dispatch_get_main_queue(), <span style="color:#000;font-weight:bold">^</span>{
+</span></span><span style="display:flex;"><span>                <span style="color:#998;font-style:italic">//设置界面的按钮显示 根据自己需求设置
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>                [l_timeButton <span style="color:#900;font-weight:bold">setTitle</span>:<span style="color:#d14">@&#34;发送验证码&#34;</span> <span style="color:#900;font-weight:bold">forState</span>:UIControlStateNormal];
+</span></span><span style="display:flex;"><span>                l_timeButton.userInteractionEnabled <span style="color:#000;font-weight:bold">=</span> <span style="color:#0086b3">YES</span>;
+</span></span><span style="display:flex;"><span>            });
+</span></span><span style="display:flex;"><span>        }<span style="color:#000;font-weight:bold">else</span>{
+</span></span><span style="display:flex;"><span>            <span style="color:#998;font-style:italic">//            int minutes = timeout / 60;
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>            <span style="color:#458;font-weight:bold">int</span> seconds <span style="color:#000;font-weight:bold">=</span> timeout <span style="color:#000;font-weight:bold">%</span> <span style="color:#099">60</span>;
+</span></span><span style="display:flex;"><span>            NSString <span style="color:#000;font-weight:bold">*</span>strTime <span style="color:#000;font-weight:bold">=</span> [NSString <span style="color:#900;font-weight:bold">stringWithFormat</span>:<span style="color:#d14">@&#34;%.2d&#34;</span>, seconds];
+</span></span><span style="display:flex;"><span>            dispatch_async(dispatch_get_main_queue(), <span style="color:#000;font-weight:bold">^</span>{
+</span></span><span style="display:flex;"><span>                <span style="color:#998;font-style:italic">//设置界面的按钮显示 根据自己需求设置
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>                NSLog(<span style="color:#d14">@&#34;____%@&#34;</span>,strTime);
+</span></span><span style="display:flex;"><span>                [l_timeButton <span style="color:#900;font-weight:bold">setTitle</span>:[NSString <span style="color:#900;font-weight:bold">stringWithFormat</span>:<span style="color:#d14">@&#34;%@秒后重新发送&#34;</span>,strTime] <span style="color:#900;font-weight:bold">forState</span>:UIControlStateNormal];
+</span></span><span style="display:flex;"><span>                l_timeButton.userInteractionEnabled <span style="color:#000;font-weight:bold">=</span> <span style="color:#0086b3">NO</span>;
+</span></span><span style="display:flex;"><span>                
+</span></span><span style="display:flex;"><span>            });
+</span></span><span style="display:flex;"><span>            timeout<span style="color:#000;font-weight:bold">--</span>;
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>    dispatch_resume(_timer);
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span> [[RACSignal <span style="color:#900;font-weight:bold">interval</span>:<span style="color:#099">1</span> <span style="color:#900;font-weight:bold">onScheduler</span>:[RACScheduler mainThreadScheduler]]<span style="color:#900;font-weight:bold">subscribeNext</span>:<span style="color:#000;font-weight:bold">^</span>(NSDate <span style="color:#000;font-weight:bold">*</span> date) {
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">static</span> NSInter <span style="color:#000;font-weight:bold">=</span> <span style="color:#099">60</span>; 
+</span></span><span style="display:flex;"><span>        <span style="color:#099">60</span> <span style="color:#000;font-weight:bold">--</span>;
+</span></span><span style="display:flex;"><span>       <span style="color:#998;font-style:italic">//  处理显示逻辑
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>    }];
+</span></span><span style="display:flex;"><span>    
+</span></span></code></pre></td></tr></table>
+</div>
+</div><!-- raw HTML omitted -->
+<h2 id="熟悉cocoapods么能大概讲一下工作原理么">熟悉CocoaPods么？能大概讲一下工作原理么？</h2>
+<!-- raw HTML omitted -->
+<blockquote>
+<p><strong>Podfile.lock</strong>：在pod install以后会生成一个Podfile.lock的文件,这个文件在多人协作开发的时候就不建议加入在.gitignore中,因为这个文件会锁定当前各依赖库的版本,就算之后再pod install也不会更改版本,不提交上去的话就可以防止第三方库升级后造成大家各自的第三方库版本不同</p>
+</blockquote>
+<h3 id="cocoapods原理"><strong>CocoaPods原理</strong></h3>
+<blockquote>
+<p>CocoaPods的原理是将所有的依赖库都放到另一个名为Pods的项目中，然后让主项目依赖Pods项目，这样，源码管理工作都从主项目移到了Pods项目中。Pods项目最终会编译成一个名为libPods.a的文件，主项目只需要依赖这个.a文件即可。</p>
+</blockquote>
+<ul>
+<li>
+<p>运行pre-install hook</p>
+</li>
+<li>
+<p>生成Pod Project</p>
+</li>
+<li>
+<p>将该pod文件添加到工程中</p>
+</li>
+<li>
+<p>添加对应的framework、.a库、bundle等</p>
+</li>
+<li>
+<p>链接头文件，生成Target</p>
+</li>
+<li>
+<p>运行post-install hook</p>
+</li>
+<li>
+<p>生成podfile.lock ，之后生成文件副本mainfest.lock并将其放在Pod文件夹内。（如果出现 The sandbox is not sync with the podfile.lock这种错误，则表示manifest.lock和podfile.lock文件不一致），此时一般需要重新运行pod install命令。</p>
+</li>
+<li>
+<p>配置原有的project文件(add build phase)</p>
+</li>
+<li>
+<p>添加了 Embed Pods Frameworks</p>
+</li>
+<li>
+<p>添加了 Copy Pod Resources 其中，pre-install hook和post-install hook可以理解成回调函数，是在podfile里对于install之前或者之后（生成工程但是还没写入磁盘）可以执行的逻辑，逻辑为：</p>
+<ul>
+<li>pre_install do |installer| # 做一些安装之前的hook end</li>
+<li>post_install do |installer| # 做一些安装之后的hook end</li>
+</ul>
+</li>
+</ul>
+<!-- raw HTML omitted -->
+<h2 id="使用sdwebimage内存爆涨的问题">使用SDWebImage内存爆涨的问题</h2>
+<!-- raw HTML omitted -->
+<ul>
+<li>产生的源码部分如下</li>
+</ul>
+<div class="highlight"><div style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-objc" data-lang="objc"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>- (UIImage <span style="color:#000;font-weight:bold">*</span>)<span style="color:#900;font-weight:bold">diskImageForKey:</span>(NSString <span style="color:#000;font-weight:bold">*</span>)<span style="color:#008080">key</span> {
+</span></span><span style="display:flex;"><span>    NSData <span style="color:#000;font-weight:bold">*</span>data <span style="color:#000;font-weight:bold">=</span> [<span style="color:#0086b3">self</span> <span style="color:#900;font-weight:bold">diskImageDataBySearchingAllPathsForKey</span>:key];
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">if</span> (data) {
+</span></span><span style="display:flex;"><span>        UIImage <span style="color:#000;font-weight:bold">*</span>image <span style="color:#000;font-weight:bold">=</span> [UIImage <span style="color:#900;font-weight:bold">sd_imageWithData</span>:data];
+</span></span><span style="display:flex;"><span>        image <span style="color:#000;font-weight:bold">=</span> [<span style="color:#0086b3">self</span> <span style="color:#900;font-weight:bold">scaledImageForKey</span>:key <span style="color:#900;font-weight:bold">image</span>:image];
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">if</span> (<span style="color:#0086b3">self</span>.shouldDecompressImages) {
+</span></span><span style="display:flex;"><span>            image <span style="color:#000;font-weight:bold">=</span> [UIImage <span style="color:#900;font-weight:bold">decodedImageWithImage</span>:image];
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">return</span> image;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">return</span> <span style="color:#0086b3">nil</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li>
+<p>在某个VC出栈的时候清除比较合适，因为有可能用户不会再去显示那些图片，但是这些图片依旧占着内存</p>
+<ul>
+<li><code>[[SDImageCache sharedImageCache] setValue:nil forKey:@&quot;memCache&quot;];</code></li>
+</ul>
+</li>
+</ul>
+<!-- raw HTML omitted -->
+<h2 id="isa指针的作用">isa指针的作用</h2>
+<!-- raw HTML omitted -->
+<ul>
+<li>
+<p>对象的isa指向类，类的isa指向元类（meta class），元类isa指向元类的根类。isa帮助一个对象找到它的方法</p>
+</li>
+<li>
+<p>是一个Class 类型的指针. 每个实例对象有个isa的指针,他指向对象的类，而Class里也有个isa的指针, 指向meteClass(元类)。元类保存了类方法的列表。当类方法被调用时，先会从本身查找类方法的实现，如果没有，元类会向他父类查找该方法。同时注意的是：元类（meteClass）也是类，它也是对象。元类也有isa指针,它的isa指针最终指向的是一个根元类(root meteClass).根元类的isa指针指向本身，这样形成了一个封闭的内循环。</p>
+</li>
+</ul>
+<!-- raw HTML omitted -->
+<h2 id="测试都有哪些方式优缺点呢">测试都有哪些方式?优缺点呢</h2>
+<!-- raw HTML omitted -->
+<ul>
+<li>
+<p>联机调试 (一般而言适用于开发人员)</p>
+<ul>
+<li>之前需要插线</li>
+<li>后期版本可以无线调试！</li>
+</ul>
+</li>
+<li>
+<p>蒲公英等分发平台(就是需要提供参与app测试人员的设备UDID) 缺点:开发者需要将这些设备的UDID添加到开发者中心，每次有新的测试人员加入，需要重新生成profiles</p>
+</li>
+<li>
+<p>TestFlight进行App Beta版测试 (apple 官方,iOS8及以上版本的iOS设备才能运行):</p>
+<ul>
+<li>优点: 无需UUID,<strong>外部测试人员的上限是10000人</strong>（2018年后又扩大了测试上限）,只需要参与app测试人员提供一个邮箱</li>
+<li></li>
+</ul>
+</li>
+</ul>
+<!-- raw HTML omitted -->
+<h2 id="xcode8开始后自动配置开发证书过程">Xcode8开始后自动配置开发证书过程?</h2>
+<!-- raw HTML omitted -->
+<ul>
+<li>Xcode会在本机钥匙串寻找team对应的开发证书，如果本地钥匙串存在该证书则加载使用</li>
+<li>不存在：则从开发者中心寻找本机对应的开发证书，如果开发者中心没有则自动生成一个并下载到钥匙串使用</li>
+</ul>
+<!-- raw HTML omitted -->
+<h2 id="项目中的图片上传功能如何实现为什么使用队列上传为什么不用异步上传">项目中的图片上传功能如何实现，为什么使用队列上传，为什么不用异步上传</h2>
+<!-- raw HTML omitted -->
+<ul>
+<li>image -&gt; data</li>
+<li>如果是所有图片一起传,可以使用异步,但是如果是有按照顺序的需求,则需要按照用户的已知顺序传</li>
+</ul>
+<!-- raw HTML omitted -->
+<h2 id="项目中你是怎么处理网络速度慢中断抖动等网络请求中的问题">项目中你是怎么处理网络速度慢、中断抖动等网络请求中的问题?</h2>
+<!-- raw HTML omitted -->
+<blockquote>
+<p>dns 和 ping 探测当前网络情况</p>
+</blockquote>
+<ul>
+<li>UI -&gt; loading/Tips</li>
+<li>netWorking -&gt;cdn ,IP 直链</li>
+</ul>
+<!-- raw HTML omitted -->
+<h3 id="觉得整理的蛮不错可以赞赏一下旺仔收集整理不易且赞且珍惜">觉得整理的蛮不错，可以赞赏一下旺仔(收集整理不易，且赞且珍惜)</h3>
+<!-- raw HTML omitted -->
+<h2 id="链接">链接</h2>
+<ul>
+<li><a href="../README.md">面试题系列目录</a></li>
+<li><strong>上一份</strong>: <a href="03interview-iOS-3.md">interview-iOS-3</a></li>
+<li><strong>下一份</strong>: <a href="05iOS%E5%AE%9D%E5%BA%93iOS%E5%BC%80%E5%8F%91%E7%AC%94%E8%AF%95%E9%A2%982017%E5%B9%B4.md">第五份：宝库iOS开发笔试题2017年:参考答案已更新完毕</a></li>
+</ul>
+
+        </div>
+
+        
+
+
+        
+
+
+        <div class="post-meta meta-tags">
+            
+            No tags
+            
+        </div>
+    </article>
+    
+    <div id="disqus_thread"></div>
+<script type="application/javascript">
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "yourdiscussshortname" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+    
+    
+    <div class="post bg-white">
+      <script src="https://utteranc.es/client.js"
+            repo= "your github repo"
+            issue-term="pathname"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+      </script>
+    </div>
+    
+    
+    
+
+</div>
+
+                    <footer id="footer">
+    <div>
+        &copy; 2023 <a href="https://YuMars.github.io">YuMars的博客 By YuMars</a>
+        
+    </div>
+    <br />
+    <div>
+        <div class="github-badge">
+            <a href="https://gohugo.io/" target="_black" rel="nofollow"><span class="badge-subject">Powered by</span><span class="badge-value bg-blue">Hugo</span></a>
+        </div>
+        <div class="github-badge">
+            <a href="https://www.flysnow.org/" target="_black"><span class="badge-subject">Design by</span><span class="badge-value bg-brightgreen">飞雪无情</span></a>
+        </div>
+        <div class="github-badge">
+            <a href="https://github.com/flysnow-org/maupassant-hugo" target="_black"><span class="badge-subject">Theme</span><span class="badge-value bg-yellowgreen">Maupassant</span></a>
+        </div>
+    </div>
+</footer>
+
+
+    
+    
+    <script type="text/javascript">
+        window.MathJax = {
+            tex2jax: {
+                inlineMath: [['$', '$']],
+                processEscapes: true
+                }
+            };
+    </script>
+    <script src='//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src='/js/totop.js?v=0.0.0' async=""></script>
+
+
+    <script type="text/javascript" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+
+
+
+
+    <script src='/js/douban.js'></script>
+
+                </div>
+
+                <div id="secondary">
+    <section class="widget">
+        <form id="search" action='https://YuMars.github.io/search' method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+      
+      <input type="text" name="q" maxlength="20" placeholder="Search">
+      <input type="hidden" name="sitesearch" value="https://YuMars.github.io">
+      <button type="submit" class="submit icon-search"></button>
+</form>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title">Latest articles</h3>
+<ul class="widget-list">
+    
+</ul>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title"><a href='/categories/'>Categories</a></h3>
+<ul class="widget-list">
+    
+</ul>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title"><a href='/tags/'>Tags</a></h3>
+<div class="tagcloud">
+    
+</div>
+    </section>
+
+    
+<section class="widget">
+    <h3 class="widget-title">Links</h3>
+    <ul class="widget-list">
+        
+        <li>
+            <a target="_blank" href="https://www.baidu.com/" title="链接Title">链接Name</a>
+        </li>
+        
+        <li>
+            <a target="_blank" href="http://yuedu.baidu.com/ebook/14a722970740be1e640e9a3e" title="Android Gradle权威指南">Android Gradle权威指南</a>
+        </li>
+        
+    </ul>
+</section>
+
+
+    <section class="widget">
+        <h3 class="widget-title">Meta</h3>
+        <ul class="widget-list">
+            <li><a href="https://YuMars.github.io/index.xml">RSS</a></li>
+        </ul>
+    </section>
+</div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
