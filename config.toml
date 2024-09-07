@@ -22,7 +22,7 @@ disqusShortname = "yourdiscussshortname"  ## 是否开启disqus评论，不要�
   author = "YuMars"
   subtitle = "不拔之志"
   keywords = "Swift,Objective-C,博客,项目管理"
-  description = "IT互联网，包括但不限于Swift语言(golang)、Java、项目管理、抖音分析、软件架构等"
+  description = "IT互联网，包括但不限于Swift语言等"
   busuanzi = true #启用不算子网页统计
   googleAd = ""  #ca-pub-xxxxxxxxxxxxxx
   localSearch = true # 启用本地搜索
@@ -39,14 +39,14 @@ disqusShortname = "yourdiscussshortname"  ## 是否开启disqus评论，不要�
 ## 友情链接，可以多个
 
 [[params.links]]
-  title = "链接Title"
-  name = "链接Name"
-  url = "https://www.baidu.com/"
+  title = "GitHub"
+  name = "GitHub"
+  url = "https://github.com/YuMars"
 
-[[params.links]]
-  title = "Android Gradle权威指南"
-  name = "Android Gradle权威指南"
-  url = "http://yuedu.baidu.com/ebook/14a722970740be1e640e9a3e"
+#[[params.links]]
+#  title = "Android Gradle权威指南"
+#  name = "Android Gradle权威指南"
+#  url = "http://yuedu.baidu.com/ebook/14a722970740be1e640e9a3e"
 
 ## 侧边栏广告位
 #[[params.ads]]
@@ -90,8 +90,8 @@ disqusShortname = "yourdiscussshortname"  ## 是否开启disqus评论，不要�
 
    [[menu.main]]
 	  identifier = "test"
-	  name = "测试"
-	  url = "/test/"
+	  name = "随笔"
+	  url = "/essay/"
 	  weight = 1
 
   [[menu.main]]

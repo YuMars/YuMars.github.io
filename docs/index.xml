@@ -6,7 +6,16 @@
     <description>Recent content on YuMars的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
-    <lastBuildDate>Tue, 07 Mar 2023 23:45:02 +0800</lastBuildDate><atom:link href="https://YuMars.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 11 Mar 2024 00:08:26 +0800</lastBuildDate><atom:link href="https://YuMars.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>iOS开发Runtime</title>
+      <link>https://YuMars.github.io/post/iOS%E5%BC%80%E5%8F%91Runtime/</link>
+      <pubDate>Mon, 11 Mar 2024 00:08:26 +0800</pubDate>
+      
+      <guid>https://YuMars.github.io/post/iOS%E5%BC%80%E5%8F%91Runtime/</guid>
+      <description>[TOC] 一、Runtime 1.什么是Runtime iOS开发过程，将源代码转换为可执行的程序，通常需要经过三个步骤：编译,链接,运行。不同的编译语言，在这三个步骤中所进行的操作有不同。 Ojbective-C是一门动态语言，在编译阶段并不知道变量的具体数据类型，也不知道所真正调用的哪个函</description>
+    </item>
+    
     <item>
       <title>iOS开发weak底层窥探</title>
       <link>https://YuMars.github.io/post/iOS%E5%BC%80%E5%8F%91weak%E5%BA%95%E5%B1%82%E7%AA%A5%E6%8E%A2/</link>
@@ -14,15 +23,6 @@
       
       <guid>https://YuMars.github.io/post/iOS%E5%BC%80%E5%8F%91weak%E5%BA%95%E5%B1%82%E7%AA%A5%E6%8E%A2/</guid>
       <description>Weak底层原理 1 weak关键字修饰的对象指针是弱引用，指向的对象引用技术不会+1，并在对象被释放的时候自动指向nil。 Weak修饰的对象指针，是维护一个hash表，key是所指向的对象指针，Value是weak指针的地址数组 在https://opensource.apple.c</description>
-    </item>
-    
-    <item>
-      <title>Archives</title>
-      <link>https://YuMars.github.io/archives/</link>
-      <pubDate>Mon, 06 Mar 2023 14:52:25 +0800</pubDate>
-      
-      <guid>https://YuMars.github.io/archives/</guid>
-      <description>interview-iOS - 4 用户需要上传和下载一个重要的资料文件，应该如何判断用户本次是否上传成功和下载成功了? ReactiveCocoa(RAC)如何防止UIButton短时间内多次重复点击，大概思路? 倒计时如何实现 ？ 熟悉CocoaPods么？能大概讲一下工作原理么？ 使用SDWebImage内存爆涨</description>
     </item>
     
     <item>
