@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    
+
+    <title>Block的本质 | YuMars的博客</title>
+    <meta property="og:title" content="Block的本质 - YuMars的博客">
+    <meta property="og:type" content="article">
+        
+    <meta property="article:published_time" content='2023-04-18T22:34:36&#43;08:00'>
+        
+        
+    <meta property="article:modified_time" content='2023-04-18T22:34:36&#43;08:00'>
+        
+    <meta name="Keywords" content="Swift,Objective-C,博客,项目管理">
+    <meta name="description" content="Block的本质">
+        
+    <meta name="author" content="YuMars">
+    <meta property="og:url" content="https://YuMars.github.io/post/Block%E7%9A%84%E6%9C%AC%E8%B4%A8/">
+    <link rel="shortcut icon" href='/favicon.ico'  type="image/x-icon">
+
+    <link rel="stylesheet" href='/css/normalize.css'>
+    <link rel="stylesheet" href='/css/style.css'>
+    <script type="text/javascript" src="//cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    
+    
+    
+    
+    
+    
+        <link rel="stylesheet" href='/css/douban.css'>
+    
+        <link rel="stylesheet" href='/css/other.css'>
+    
+</head>
+
+<body>
+    <header id="header" class="clearfix">
+    <div class="container">
+        <div class="col-group">
+            <div class="site-name ">
+                
+                    <a id="logo" href="https://YuMars.github.io">
+                        YuMars的博客
+                    </a>
+                
+                <p class="description">不拔之志</p>
+            </div>
+            <div>
+                <nav id="nav-menu" class="clearfix">
+                    <a class="current" href="https://YuMars.github.io">Home</a>
+                    
+                    <a  href="https://YuMars.github.io/essay/" title="随笔">随笔</a>
+                    
+                    <a  href="https://YuMars.github.io/tools/" title="工具">工具</a>
+                    
+                    <a  href="https://YuMars.github.io/archives/" title="归档">归档</a>
+                    
+                    <a  href="https://YuMars.github.io/about/" title="关于">关于</a>
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+    <div id="body">
+        <div class="container">
+            <div class="col-group">
+
+                <div class="col-8" id="main">
+                    
+<div class="res-cons">
+    <style type="text/css">
+    .post-toc {
+        position: fixed;
+        width: 200px;
+        margin-left: -210px;
+        padding: 5px 10px;
+        font-family: Athelas, STHeiti, Microsoft Yahei, serif;
+        font-size: 12px;
+        border: 1px solid rgba(0, 0, 0, .07);
+        border-radius: 5px;
+        background-color: rgba(255, 255, 255, 0.98);
+        background-clip: padding-box;
+        -webkit-box-shadow: 1px 1px 2px rgba(0, 0, 0, .125);
+        box-shadow: 1px 1px 2px rgba(0, 0, 0, .125);
+        word-wrap: break-word;
+        white-space: nowrap;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        z-index: 999;
+        cursor: pointer;
+        max-height: 70%;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .post-toc .post-toc-title {
+        width: 100%;
+        margin: 0 auto;
+        font-size: 20px;
+        font-weight: 400;
+        text-transform: uppercase;
+        text-align: center;
+    }
+
+    .post-toc .post-toc-content {
+        font-size: 15px;
+    }
+
+    .post-toc .post-toc-content>nav>ul {
+        margin: 10px 0;
+    }
+
+    .post-toc .post-toc-content ul {
+        padding-left: 20px;
+        list-style: square;
+        margin: 0.5em;
+        line-height: 1.8em;
+    }
+
+    .post-toc .post-toc-content ul ul {
+        padding-left: 15px;
+        display: none;
+    }
+
+    @media print,
+    screen and (max-width:1057px) {
+        .post-toc {
+            display: none;
+        }
+    }
+</style>
+<div class="post-toc" style="position: absolute; top: 188px;">
+    <h2 class="post-toc-title">Table of Contents</h2>
+    <div class="post-toc-content">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#block的本质">block的本质</a></li>
+    <li><a href="#block结构体">block结构体</a></li>
+    <li><a href="#__block_impl结构体">__block_impl结构体</a></li>
+    <li><a href="#__viewcontroller__viewdidload_block_desc_0">__ViewController__viewDidLoad_block_desc_0</a></li>
+    <li><a href="#__viewcontroller__viewdidload_block_func_0">__ViewController__viewDidLoad_block_func_0</a></li>
+    <li><a href="#简化block声明和调用">简化block声明和调用</a></li>
+    <li><a href="#调用block代码">调用block代码</a></li>
+    <li><a href="#block类型">block类型</a></li>
+    <li><a href="#应用程序的内存分配">应用程序的内存分配：</a></li>
+    <li><a href="#block的类型原因">Block的类型原因：</a></li>
+    <li><a href="#每种类型的block调用copy后的结果">每种类型的block调用copy后的结果</a>
+      <ul>
+        <li><a href="#block的copy">block的copy</a></li>
+        <li><a href="#block_copy">block_copy</a></li>
+        <li><a href="#block-release">block release</a></li>
+        <li><a href="#对象类型的auto变量">对象类型的auto变量：</a></li>
+        <li><a href="#__block修饰符修改变量">__block修饰符（修改变量）</a></li>
+        <li><a href="#__block的内存管理">__block的内存管理</a></li>
+        <li><a href="#__forwarding指针">__forwarding指针</a></li>
+        <li><a href="#被__block修饰的对象类型">被__block修饰的对象类型</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var postToc = $(".post-toc");
+        if (postToc.length) {
+            var leftPos = $("#main").offset().left;
+            if (leftPos < 220) {
+                postToc.css({ "width": leftPos - 10, "margin-left": (0 - leftPos) })
+            }
+
+            var t = postToc.offset().top - 20,
+                a = {
+                    start: {
+                        position: "absolute",
+                        top: t
+                    },
+                    process: {
+                        position: "fixed",
+                        top: 20
+                    },
+                };
+            $(window).scroll(function () {
+                var e = $(window).scrollTop();
+                e < t ? postToc.css(a.start) : postToc.css(a.process)
+            })
+        }
+
+        if ($("#TableOfContents").children().length < 1) {
+            $(".post-toc").remove();
+        }
+    })
+</script>
+    <article class="post">
+        <header>
+            <h1 class="post-title">Block的本质</h1>
+        </header>
+        
+  <time datetime="2023-04-18T14:34:36Z" class="post-meta meta-date dt-published">
+    2023-04-18
+  </time>
+
+
+
+        
+        <div class="post-meta">
+            <span id="busuanzi_container_page_pv">&nbsp;|
+                <span id="busuanzi_value_page_pv"></span> <span>reads</span>
+            </span>
+        </div>
+        
+        
+        <div class="post-content">
+            <h1 id="block">Block</h1>
+<h2 id="block的本质">block的本质</h2>
+<ol>
+<li>block本质是一个OC对象，它内部也有一个指针</li>
+<li>block是封装了函数实现已经函数调用环境的OC对象</li>
+<li>block的底层结构</li>
+</ol>
+<pre tabindex="0"><code>struct __block_impl {
+    void *isa;
+    int Flags;
+    int Reserved;
+    void *FuncPtr;
+    (void *(void *,...))invoke
+    variables
+    (struct Block_descriptor *)descriptor
+};
+</code></pre><pre tabindex="0"><code>Block_descriptor: {
+    (unsigned long int)reserved
+    (unsigned long int)size
+    (void *(void *, void *))copy
+    (void *(void *))dispose
+}
+</code></pre><h2 id="block结构体">block结构体</h2>
+<pre tabindex="0"><code>struct __ViewController__viewDidLoad_block_impl_0 {
+    struct __block_impl impl;
+    struct __ViewController__viewDidLoad_block_desc_0* Desc; // 描述信息
+    int num;
+    
+    // 下面是构造函数(相当于初始化函数)
+    __ViewController__viewDidLoad_block_impl_0(void *fp,
+                                               struct __ViewController__viewDidLoad_block_desc_0 *desc,
+                                               int _num,
+                                               int flags=0) : num(_num) {
+        impl.isa = &amp;_NSConcreteStackBlock;
+        impl.Flags = flags;
+        impl.FuncPtr = fp;
+        Desc = desc;
+    }
+};
+</code></pre><h2 id="__block_impl结构体">__block_impl结构体</h2>
+<pre tabindex="0"><code>struct __block_impl {
+  void *isa;
+  int Flags;
+  int Reserved;
+  void *FuncPtr; // 函数调用地址
+};
+</code></pre><h2 id="__viewcontroller__viewdidload_block_desc_0">__ViewController__viewDidLoad_block_desc_0</h2>
+<pre tabindex="0"><code>static struct __ViewController__viewDidLoad_block_desc_0 {
+  size_t reserved;
+  size_t Block_size; // block占用内存大小
+} __ViewController__viewDidLoad_block_desc_0_DATA = { 
+    0, 
+    sizeof(struct __ViewController__viewDidLoad_block_impl_0)
+};
+</code></pre><h2 id="__viewcontroller__viewdidload_block_func_0">__ViewController__viewDidLoad_block_func_0</h2>
+<pre tabindex="0"><code>static void __ViewController__viewDidLoad_block_func_0(struct __ViewController__viewDidLoad_block_impl_0 *__cself, int a, int b) {
+      int num = __cself-&gt;num; // bound by copy
+            NSLog((NSString *)&amp;__NSConstantStringImpl__var_folders_h6_5t3f7nb176g5jy6p602g48f80000gn_T_ViewController_36b3f2_mi_0, num);
+}
+</code></pre><h2 id="简化block声明和调用">简化block声明和调用</h2>
+<p>// 定义block变量</p>
+<pre tabindex="0"><code>void(*parameterBlock)(int, int) = (
+&amp;__ViewController__viewDidLoad_block_impl_0( __ViewController__viewDidLoad_block_func_0, // block内部执行的代码
+&amp;__ViewController__viewDidLoad_block_desc_0_DATA,  // block描述信息
+num));
+</code></pre><h2 id="调用block代码">调用block代码</h2>
+<pre tabindex="0"><code>((parameterBlock)-&gt;FuncPtr)(parameterBlock, num, d);
+</code></pre><p>为了保证block内部变量能够正常访问外部的变量。block有个变量捕获机制：block结构体内部新增一个变量存储值</p>
+<pre tabindex="0"><code>变量类型                捕获到block内部              访问方式
+局部变量 auto                 √                     值传递
+局部变量 static               √                     指针传递
+全局变量                      X                     直接访问
+</code></pre><blockquote>
+<p>auto:离开作用域就会自动销毁</p>
+</blockquote>
+<p>会进行捕获self:因为self是auto局部变量 -(void)test()   ==   - (void)test(Class *self, SEL _cmd)传入block中
+void(^block4)(void) = ^{
+NSLog(@&quot;%@&quot;, self);
+};
+block();</p>
+<h2 id="block类型">block类型</h2>
+<p>block类型:可以通过class方法或者isa指针查看具体类型，最终都是继承自NSBlock类型</p>
+<ul>
+<li>1.<em>NSGlobalBlock</em>_(_NSConcreteGloalBlock)</li>
+<li>2.<em>NSStackBlock</em>_(_NSConcreteStackBlock)</li>
+<li>3.<em>NSMallocBlock</em>_(_NSConcreteMallocBlock)</li>
+</ul>
+<p>GlobalBlock:</p>
+<pre tabindex="0"><code>void(^globalBlock)(void) = ^{
+    NSLog(@&#34;&#34;);
+};
+
+1. __NSGlobalBlock__ : 
+    NSLog(@&#34;globalBlock:%@&#34;, [globalBlock class]);
+2. NSBlock: 
+    NSLog(@&#34;globalBlock:%@&#34;, [[globalBlock class] superclass]);
+3. NSObject: 
+    NSLog(@&#34;globalBlock:%@&#34;, [[[globalBlock class] superclass] superclass]);
+</code></pre><h2 id="应用程序的内存分配">应用程序的内存分配：</h2>
+<pre tabindex="0"><code>程序区域(.text)：
+数据区域(.data)：                          _NSConcreteGlobalBlock
+堆区(手动分配内存，需要手动管理内存，申请释放)：  _NSContreteMalllocBlock
+栈区(自动释放内存)：                         _NSContreteStackBlock
+</code></pre><h2 id="block的类型原因">Block的类型原因：</h2>
+<pre tabindex="0"><code>Block类型                     环境
+_NSGlobalBlock_             没有访问auto变量
+_NSStackBlock_              访问了auto变量
+_NSMallocBlock_             _NSStackBlock_调用类copy
+</code></pre><h2 id="每种类型的block调用copy后的结果">每种类型的block调用copy后的结果</h2>
+<pre tabindex="0"><code>Block的类                 副本源的配置存储区           复制效果
+_NSConcreteGlobalBlock_           栈                 从栈复制到堆
+_NSConcreteStackBlock_          程序的数据区            什么也不做
+_NSConcreteMallocBlock_           堆                  引用计数增加
+</code></pre><h3 id="block的copy">block的copy</h3>
+<p>1.在ARC环境下，编译器会根据情况自动将栈上的block复制到堆上(copy)：</p>
+<blockquote>
+<ol>
+<li>block作为函数返回值</li>
+<li>将block赋值给strong指针</li>
+<li>block作为Cocoa API里的UsingBlock</li>
+<li>block作为GCD API中的方法参数时</li>
+</ol>
+</blockquote>
+<p>_NSMallocBlock 会持有引用的变量，使引用的变量引用计数器+1
+_NSMallocBlock 不会持有引用的变量</p>
+<h3 id="block_copy">block_copy</h3>
+<p>block的复制可以使用，Block_copy()函数又或者copy实例方法。
+Block_copy()的实现。在Block.h文件中看到(在Xcode中也可以找到)：</p>
+<pre tabindex="0"><code>#define Block_copy(...) ((__typeof(__VA_ARGS__))_Block_copy((const void *)(__VA_ARGS__)))
+</code></pre><p>Block_copy()的原型是_Block_copy()函数，而实际上最后调用的是_Block_copy_internal()函数：</p>
+<pre tabindex="0"><code>//这里传入的参数实际上就是Block
+void *_Block_copy(const void *arg) {
+    return _Block_copy_internal(arg, WANTS_ONE);
+}
+
+static void *_Block_copy_internal(const void *arg, const int flags) {
+    struct Block_layout *aBlock;
+
+    //1.如果传递的参数为NULL，返回NULL。
+    if (!arg) return NULL;
+    
+    //2.参数类型转换。转为指向Block_layout结构体的指针。Block_layout结构体请回顾文章开头，相当于clang转换后的__main_block_impl_0结构体，包括指向block的实现功能的指针和各种数据。
+    aBlock = (struct Block_layout *)arg;
+
+    //3.如果block的flags包含BLOCK_NEEDS_FREE，表明它是堆上的Block（为什么？见第7步注释）
+    //增加引用计数，返回相同的block
+    if (aBlock-&gt;flags &amp; BLOCK_NEEDS_FREE) {
+        // latches on high
+        latching_incr_int(&amp;aBlock-&gt;flags);
+        return aBlock;
+    }
+    //这里删掉了与垃圾回收（GC）相关的代码，GC不做讨论
+
+    //4.如果是全局block，什么也不做，返回相同的block
+    else if (aBlock-&gt;flags &amp; BLOCK_IS_GLOBAL) {
+        return aBlock;
+    }
+
+    // Its a stack block.  Make a copy.
+    if (!isGC) {
+        //5.能够走到这里，表明是一个栈Block。需要复制到堆上。第一步申请内存
+        struct Block_layout *result = malloc(aBlock-&gt;descriptor-&gt;size);
+        if (!result) return (void *)0;
+        //6.将栈数据复制到堆上
+        memmove(result, aBlock, aBlock-&gt;descriptor-&gt;size); // bitcopy first
+        //7.更新block的flags
+        //第一句后面的注释说它不是必须的。
+        result-&gt;flags &amp;= ~(BLOCK_REFCOUNT_MASK);    // XXX not needed
+        //设置flags为BLOCK_NEEDS_FREE，表明它是一个堆block。内存支持它一旦引用计数=0，
+        //就进行释放。 “|1”是用来把block的引用计数设置为1。
+        result-&gt;flags |= BLOCK_NEEDS_FREE | 1;
+        //8.block的isa指针设置为_NSConcreteMallocBlock
+        result-&gt;isa = _NSConcreteMallocBlock;
+        //9.如果block有copy helper函数就调用它（和block所持有对象的内存管理有关，文章后面会讲到这部分）
+        if (result-&gt;flags &amp; BLOCK_HAS_COPY_DISPOSE) {
+            //printf(&#34;calling block copy helper %p(%p, %p)...\n&#34;, aBlock-&gt;descriptor-&gt;copy, result, aBlock);
+            (*aBlock-&gt;descriptor-&gt;copy)(result, aBlock); // do fixup
+        }
+        return result;
+    }
+    else {
+        //GC相关
+    }
+}
+</code></pre><h3 id="block-release">block release</h3>
+<p>同样地，block的释放可以使用Block_release()函数或者release方法。</p>
+<pre tabindex="0"><code>#define Block_release(...) _Block_release((const void *)(__VA_ARGS__))
+</code></pre><p>Block_release()原型是_Block_release()函数：</p>
+<pre tabindex="0"><code>void _Block_release(void *arg) {
+    //1.参数类型转换，转换为一个指向Block_layout结构体的指针。
+    struct Block_layout *aBlock = (struct Block_layout *)arg;
+    if (!aBlock) return;
+
+    //2.取出flags中表示引用计数的部分，并且对它递减。
+    int32_t newCount;
+    newCount = latching_decr_int(&amp;aBlock-&gt;flags) &amp; BLOCK_REFCOUNT_MASK;
+    //3.如果引用计数&gt;0，表明仍然有对block的引用，block不需要释放
+    if (newCount &gt; 0) return;
+
+    if (aBlock-&gt;flags &amp; BLOCK_IS_GC) {
+        //GC相关
+    }
+    //4.flags包含BLOCK_NEEDS_FREE（堆block），且引用计数=0
+    else if (aBlock-&gt;flags &amp; BLOCK_NEEDS_FREE) {
+        //如果有copy helper函数就调用，释放block捕获的一些对象，对应_Block_copy_internal中的第9步
+        if (aBlock-&gt;flags &amp; BLOCK_HAS_COPY_DISPOSE)(*aBlock-&gt;descriptor-&gt;dispose)(aBlock);
+        //释放block
+        _Block_deallocator(aBlock);
+    }
+    //5.全局Block，什么也不做
+    else if (aBlock-&gt;flags &amp; BLOCK_IS_GLOBAL) {
+        ;
+    }
+    //6.发生了一些奇怪的事情导致堆栈block视图被释放，打印日志警告开发者
+    else {
+        printf(&#34;Block_release called upon a stack Block: %p, ignored\n&#34;, (void *)aBlock);
+    }
+}
+</code></pre><h3 id="对象类型的auto变量">对象类型的auto变量：</h3>
+<h4 id="当block内部访问了对象类型的auto变量时">当block内部访问了对象类型的auto变量时</h4>
+<ol>
+<li>如果block在栈上，讲不会对auto变量产生强引用</li>
+<li>如果block被拷贝到堆上
+会调用block内部的copy函数
+copy函数内部会调用_Block_object_assign函数
+_Block_object_assign函数会根据auto变量的修饰符（__strong , __weak, __unsafe_unretain）做出相应的操作，类似于retain（形成强引用、弱引用）</li>
+<li>如果block从堆上移除
+会调用block内部的dispose函数
+dispose函数内部会调用_Block_object_dispose函数
+_Block_object_dispose函数会自动释放引用的auto变量，类似于release</li>
+</ol>
+<pre tabindex="0"><code>函数                  调用时机
+copy函数              栈上的Block复制到堆时
+dispose函数           堆上的block被废弃时
+</code></pre><h3 id="__block修饰符修改变量">__block修饰符（修改变量）</h3>
+<p>1.__block可以用于解决block内部无法修改auto变量值的问题
+2.__block不能修饰全局变量、静态变量（static）</p>
+<p>__block会将变量包装成一个对象</p>
+<pre tabindex="0"><code>__block int a = 10;
+struct __Block_byref_num1_0 {
+    void *__isa;
+    __Block_byref_num1_0 *__forwarding; // 自己的地址传给__forwarding
+    int __flags;
+    int __size;
+    int num1;
+};
+</code></pre><hr>
+<h3 id="__block的内存管理">__block的内存管理</h3>
+<ol>
+<li>
+<p>block在栈上时，并不会对__block变量产生强引用</p>
+</li>
+<li>
+<p>当block被copy到堆时
+会调用block内部的copy函数
+copy函数内部会调用_Block_object_assign函数
+_Block_object_assign函数会对__block变量形成强引用（retain）
+_Block_object_assign((void*)&amp;dst-&gt;a, (void <em>)src-&gt;a, 8); // BYREF
+_Block_object_assign((void</em>)&amp;dst-&gt;p, (void *)src-&gt;p, 3); // OBJECT</p>
+</li>
+<li>
+<p>当block从堆中移除
+会调用block内部的dispose函数
+dispose函数内部会调用_Block_object_dispose函数
+_Block_object_dispose函数会自动释放引用的__block变量(release)
+_Block_object_dispose((void *)src-&gt;a, 8) // BYREF
+_Block_object_dispose((void *)src-&gt;p, 3) // OBJECT</p>
+</li>
+</ol>
+<hr>
+<h3 id="__forwarding指针">__forwarding指针</h3>
+<p>栈上的_forwarding指针指向自己本身
+栈上的block复制到堆上后
+栈上_block结构体的_forwarding指针指向堆上的block结构体
+堆栈_block结构体的_forwarding指针指向自己本身的指针</p>
+<h3 id="被__block修饰的对象类型">被__block修饰的对象类型</h3>
+<p>当__block变量在栈上时，不会对指向的对象产生强引用</p>
+<p>当__block变量被copy到堆时
+会调用__block结构体内部的copy函数
+copy函数内部会调用_Block_object_assign函数
+_Block_object_assign函数会根据所指向对象的修饰符(__strong, __weak, __unsafe_unretained)做出相应的操作，形成强引用(retain)或者弱引用</p>
+<p>如果__block从堆上移除
+会调用__block变量内部的dispose函数
+dispose函数内部会调用_Block_object_dispose函数
+_Block_object_dispose函数会自动释放所指向的对象(release);</p>
+<hr>
+<pre tabindex="0"><code>循环引用问题：
+    object.block内部持有了 object的对象
+ 
+ARC:    
+    用__weak __unsafe_unretain解决
+    __weak typeof(self) weakSelf = self;
+    self.block = ^{
+        weakSelf;
+    };
+    
+    __unsafe_unretain id weakSelf = self;
+    self.block = ^{
+        weakSelf;
+    };
+    
+    用__block解决 对象 = nil
+    __block id weakSelf = self;
+    self.block = ^{
+        weakSelf = nil;
+    };
+    
+    self.blocl();
+    
+MRC:
+    用__unsafe_unretain解决
+</code></pre><hr>
+<h4 id="qblock的原理是什么本质是什么">Q:block的原理是什么？本质是什么？</h4>
+<p>A:block本质是一个OC对象，内部也有一个isa指针，是封装了函数调用已经函数调用环境的OC对象</p>
+<h4 id="qblock的作用是什么有什么使用注意点">Q:block的作用是什么？有什么使用注意点</h4>
+<p>A:将__block修饰的变量包装成对象,解决block内部无法修改auto变量的问题。需要注意内存管理</p>
+<h4 id="qblock的属性修饰符为什么是copy使用block是哪些使用注意">Q:block的属性修饰符为什么是copy？使用block是哪些使用注意</h4>
+<p>A:block不使用copy，在栈上不会再堆上。</p>
+<h4 id="qblock在修改nsmutablearray需不需要添加__block">Q:block在修改NSMutableArray，需不需要添加__block</h4>
+<p>A:不需要</p>
+
+        </div>
+
+        
+<div class="post-archive">
+    <ul class="post-copyright">
+        <li><strong>Author: </strong><a rel="author" href="https://YuMars.github.io">YuMars</a></li>
+        <li style="word-break:break-all"><strong>Link: </strong><a href="https://YuMars.github.io/post/Block%E7%9A%84%E6%9C%AC%E8%B4%A8/">https://YuMars.github.io/post/Block%E7%9A%84%E6%9C%AC%E8%B4%A8/</a></li>
+        <li><strong>License: </strong>This work is under a <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/">知识共享署名-非商业性使用-禁止演绎 4.0 国际许可协议</a>. Kindly fulfill the requirements of the aforementioned License when adapting or creating a derivative of this work.</li>
+    </ul>
+</div>
+<br/>
+
+
+
+        
+
+<div class="post-archive">
+    <h2>See Also</h2>
+    <ul class="listing">
+        
+        <li><a href="/post/%E4%B8%8D%E8%B0%88Mach-O%E9%83%BD%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%AE%9E%E5%AE%9E%E5%9C%A8%E5%9C%A8%E7%9A%84%E5%BF%AB%E9%80%9F%E7%98%A6%E8%BA%AB/">不谈Mach O都项目中实实在在的快速瘦身</a></li>
+        
+        <li><a href="/post/iOS%E5%BC%80%E5%8F%91Category%E5%88%86%E7%B1%BB%E7%9A%84%E5%BA%95%E5%B1%82%E9%80%BB%E8%BE%91/">iOS开发Category分类的底层逻辑</a></li>
+        
+        <li><a href="/post/iOS%E5%BC%80%E5%8F%91Runtime/">iOS开发Runtime</a></li>
+        
+        <li><a href="/post/iOS%E5%BC%80%E5%8F%91weak%E5%BA%95%E5%B1%82%E7%AA%A5%E6%8E%A2/">iOS开发weak底层窥探</a></li>
+        
+        <li><a href="/post/macOS&#43;Hugo&#43;Github%E6%90%AD%E5%BB%BAblog/">macOS&#43;Hugo&#43;Github搭建blog</a></li>
+        
+    </ul>
+</div>
+
+
+        <div class="post-meta meta-tags">
+            
+            No tags
+            
+        </div>
+    </article>
+    
+    <div id="disqus_thread"></div>
+<script type="application/javascript">
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "yourdiscussshortname" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+    
+    
+    <div class="post bg-white">
+      <script src="https://utteranc.es/client.js"
+            repo= "your github repo"
+            issue-term="pathname"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+      </script>
+    </div>
+    
+    
+    
+
+</div>
+
+                    <footer id="footer">
+    <div>
+        &copy; 2024 <a href="https://YuMars.github.io">YuMars的博客 By YuMars</a>
+        
+    </div>
+    <br />
+    <div>
+        <div class="github-badge">
+            <a href="https://gohugo.io/" target="_black" rel="nofollow"><span class="badge-subject">Powered by</span><span class="badge-value bg-blue">Hugo</span></a>
+        </div>
+        
+        <div class="github-badge">
+            <a href="https://github.com/flysnow-org/maupassant-hugo" target="_black"><span class="badge-subject">Theme</span><span class="badge-value bg-yellowgreen">Maupassant</span></a>
+        </div>
+    </div>
+</footer>
+
+
+    
+    
+    <script type="text/javascript">
+        window.MathJax = {
+            tex2jax: {
+                inlineMath: [['$', '$']],
+                processEscapes: true
+                }
+            };
+    </script>
+    <script src='//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src='/js/totop.js?v=0.0.0' async=""></script>
+<style type="text/css">
+div.highlight {
+    position: relative;
+    margin: 1em 0px;
+}
+
+.copy-code {
+    display: none;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(78, 78, 78, 0.8);
+    border-radius: var(--radius);
+    padding: 0 5px;
+    font: inherit;
+    user-select: none;
+    cursor: pointer;
+    border: 0;
+    --radius: 8px;
+}
+
+div.highlight:hover .copy-code,pre:hover .copy-code {
+    display: block;
+}
+
+</style>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+
+
+    <script type="text/javascript" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+
+
+
+
+    <script src='/js/douban.js'></script>
+
+                </div>
+
+                <div id="secondary">
+    <section class="widget">
+        <form id="search" action='https://YuMars.github.io/search' method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+      
+      <input type="text" name="q" maxlength="20" placeholder="Search">
+      <input type="hidden" name="sitesearch" value="https://YuMars.github.io">
+      <button type="submit" class="submit icon-search"></button>
+</form>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title">Latest articles</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://YuMars.github.io/post/NSNotification%E5%8F%91%E9%80%81%E6%95%B0%E9%87%8F%E4%B8%8D%E5%9B%BA%E5%AE%9A%E7%9A%84%E5%8E%9F%E5%9B%A0/" title="NSNotification发送数量不固定的原因" target="_blank">NSNotification发送数量不固定的原因</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/%E4%BB%80%E4%B9%88%E6%98%AFRunloop/" title="什么是Runloop" target="_blank">什么是Runloop</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/Block%E7%9A%84%E6%9C%AC%E8%B4%A8/" title="Block的本质" target="_blank">Block的本质</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/%E4%B8%8D%E8%B0%88Mach-O%E9%83%BD%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%AE%9E%E5%AE%9E%E5%9C%A8%E5%9C%A8%E7%9A%84%E5%BF%AB%E9%80%9F%E7%98%A6%E8%BA%AB/" title="不谈Mach O都项目中实实在在的快速瘦身" target="_blank">不谈Mach O都项目中实实在在的快速瘦身</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/iOS%E5%BC%80%E5%8F%91Category%E5%88%86%E7%B1%BB%E7%9A%84%E5%BA%95%E5%B1%82%E9%80%BB%E8%BE%91/" title="iOS开发Category分类的底层逻辑" target="_blank">iOS开发Category分类的底层逻辑</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/iOS%E5%BC%80%E5%8F%91Runtime/" title="iOS开发Runtime" target="_blank">iOS开发Runtime</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/iOS%E5%BC%80%E5%8F%91weak%E5%BA%95%E5%B1%82%E7%AA%A5%E6%8E%A2/" title="iOS开发weak底层窥探" target="_blank">iOS开发weak底层窥探</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/macOS&#43;Hugo&#43;Github%E6%90%AD%E5%BB%BAblog/" title="macOS&#43;Hugo&#43;Github搭建blog" target="_blank">macOS&#43;Hugo&#43;Github搭建blog</a>
+    </li>
+    
+</ul>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title"><a href='/categories/'>Categories</a></h3>
+<ul class="widget-list">
+    
+</ul>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title"><a href='/tags/'>Tags</a></h3>
+<div class="tagcloud">
+    
+</div>
+    </section>
+
+    
+<section class="widget">
+    <h3 class="widget-title">Links</h3>
+    <ul class="widget-list">
+        
+        <li>
+            <a target="_blank" href="https://github.com/YuMars" title="GitHub">GitHub</a>
+        </li>
+        
+    </ul>
+</section>
+
+
+    <section class="widget">
+        <h3 class="widget-title">Meta</h3>
+        <ul class="widget-list">
+            <li><a href="https://YuMars.github.io/index.xml">RSS</a></li>
+        </ul>
+    </section>
+</div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
