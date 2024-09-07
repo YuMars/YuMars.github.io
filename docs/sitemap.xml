@@ -2,16 +2,19 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://YuMars.github.io/post/iOS%E5%BC%80%E5%8F%91weak%E5%BA%95%E5%B1%82%E7%AA%A5%E6%8E%A2/</loc>
+    <lastmod>2023-03-07T23:45:02+08:00</lastmod>
+  </url><url>
+    <loc>https://YuMars.github.io/post/</loc>
+    <lastmod>2023-03-07T23:45:02+08:00</lastmod>
+  </url><url>
+    <loc>https://YuMars.github.io/</loc>
+    <lastmod>2023-03-07T23:45:02+08:00</lastmod>
+  </url><url>
     <loc>https://YuMars.github.io/archives/</loc>
     <lastmod>2023-03-06T14:52:25+08:00</lastmod>
   </url><url>
     <loc>https://YuMars.github.io/post/macOS&#43;Hugo&#43;Github%E6%90%AD%E5%BB%BAblog/</loc>
-    <lastmod>2023-03-03T15:42:36+08:00</lastmod>
-  </url><url>
-    <loc>https://YuMars.github.io/post/</loc>
-    <lastmod>2023-03-03T15:42:36+08:00</lastmod>
-  </url><url>
-    <loc>https://YuMars.github.io/</loc>
     <lastmod>2023-03-03T15:42:36+08:00</lastmod>
   </url><url>
     <loc>https://YuMars.github.io/categories/</loc>

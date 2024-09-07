@@ -1,0 +1,1446 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    
+
+    <title>iOS开发weak底层窥探 | YuMars的博客</title>
+    <meta property="og:title" content="iOS开发weak底层窥探 - YuMars的博客">
+    <meta property="og:type" content="article">
+        
+    <meta property="article:published_time" content='2023-03-07T23:45:02&#43;08:00'>
+        
+        
+    <meta property="article:modified_time" content='2023-03-07T23:45:02&#43;08:00'>
+        
+    <meta name="Keywords" content="Swift,Objective-C,博客,项目管理">
+    <meta name="description" content="iOS开发weak底层窥探">
+        
+    <meta name="author" content="YuMars">
+    <meta property="og:url" content="https://YuMars.github.io/post/iOS%E5%BC%80%E5%8F%91weak%E5%BA%95%E5%B1%82%E7%AA%A5%E6%8E%A2/">
+    <link rel="shortcut icon" href='/favicon.ico'  type="image/x-icon">
+
+    <link rel="stylesheet" href='/css/normalize.css'>
+    <link rel="stylesheet" href='/css/style.css'>
+    <script type="text/javascript" src="//cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    
+    
+    
+    
+    
+    
+        <link rel="stylesheet" href='/css/douban.css'>
+    
+        <link rel="stylesheet" href='/css/other.css'>
+    
+</head>
+
+<body>
+    <header id="header" class="clearfix">
+    <div class="container">
+        <div class="col-group">
+            <div class="site-name ">
+                
+                    <a id="logo" href="https://YuMars.github.io">
+                        YuMars的博客
+                    </a>
+                
+                <p class="description">不拔之志</p>
+            </div>
+            <div>
+                <nav id="nav-menu" class="clearfix">
+                    <a class="current" href="https://YuMars.github.io">Home</a>
+                    
+                    <a  href="https://YuMars.github.io/test/" title="测试">测试</a>
+                    
+                    <a  href="https://YuMars.github.io/tools/" title="工具">工具</a>
+                    
+                    <a  href="https://YuMars.github.io/archives/" title="归档">归档</a>
+                    
+                    <a  href="https://YuMars.github.io/about/" title="关于">关于</a>
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+    <div id="body">
+        <div class="container">
+            <div class="col-group">
+
+                <div class="col-8" id="main">
+                    
+<div class="res-cons">
+    <style type="text/css">
+    .post-toc {
+        position: fixed;
+        width: 200px;
+        margin-left: -210px;
+        padding: 5px 10px;
+        font-family: Athelas, STHeiti, Microsoft Yahei, serif;
+        font-size: 12px;
+        border: 1px solid rgba(0, 0, 0, .07);
+        border-radius: 5px;
+        background-color: rgba(255, 255, 255, 0.98);
+        background-clip: padding-box;
+        -webkit-box-shadow: 1px 1px 2px rgba(0, 0, 0, .125);
+        box-shadow: 1px 1px 2px rgba(0, 0, 0, .125);
+        word-wrap: break-word;
+        white-space: nowrap;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        z-index: 999;
+        cursor: pointer;
+        max-height: 70%;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .post-toc .post-toc-title {
+        width: 100%;
+        margin: 0 auto;
+        font-size: 20px;
+        font-weight: 400;
+        text-transform: uppercase;
+        text-align: center;
+    }
+
+    .post-toc .post-toc-content {
+        font-size: 15px;
+    }
+
+    .post-toc .post-toc-content>nav>ul {
+        margin: 10px 0;
+    }
+
+    .post-toc .post-toc-content ul {
+        padding-left: 20px;
+        list-style: square;
+        margin: 0.5em;
+        line-height: 1.8em;
+    }
+
+    .post-toc .post-toc-content ul ul {
+        padding-left: 15px;
+        display: none;
+    }
+
+    @media print,
+    screen and (max-width:1057px) {
+        .post-toc {
+            display: none;
+        }
+    }
+</style>
+<div class="post-toc" style="position: absolute; top: 188px;">
+    <h2 class="post-toc-title">Table of Contents</h2>
+    <div class="post-toc-content">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#1">1</a></li>
+    <li><a href="#2">2</a></li>
+    <li><a href="#3">3</a>
+      <ul>
+        <li><a href="#31">3.1</a></li>
+        <li><a href="#32">3.2</a></li>
+        <li><a href="#33">3.3</a></li>
+        <li><a href="#34">3.4</a></li>
+        <li><a href="#35">3.5</a></li>
+        <li><a href="#36">3.6</a></li>
+        <li><a href="#37">3.7</a></li>
+      </ul>
+    </li>
+    <li><a href="#4">4</a>
+      <ul>
+        <li><a href="#41">4.1</a></li>
+        <li><a href="#42">4.2</a></li>
+        <li><a href="#43">4.3</a></li>
+        <li><a href="#44">4.4</a></li>
+        <li><a href="#45">4.5</a></li>
+        <li><a href="#46">4.6</a></li>
+        <li><a href="#47">4.7</a></li>
+        <li><a href="#48">4.8</a></li>
+        <li><a href="#49">4.9</a></li>
+        <li><a href="#410">4.10</a></li>
+        <li><a href="#411">4.11</a></li>
+        <li><a href="#412">4.12</a></li>
+        <li><a href="#413">4.13</a></li>
+      </ul>
+    </li>
+    <li><a href="#5">5</a></li>
+  </ul>
+</nav>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var postToc = $(".post-toc");
+        if (postToc.length) {
+            var leftPos = $("#main").offset().left;
+            if (leftPos < 220) {
+                postToc.css({ "width": leftPos - 10, "margin-left": (0 - leftPos) })
+            }
+
+            var t = postToc.offset().top - 20,
+                a = {
+                    start: {
+                        position: "absolute",
+                        top: t
+                    },
+                    process: {
+                        position: "fixed",
+                        top: 20
+                    },
+                };
+            $(window).scroll(function () {
+                var e = $(window).scrollTop();
+                e < t ? postToc.css(a.start) : postToc.css(a.process)
+            })
+        }
+
+        if ($("#TableOfContents").children().length < 1) {
+            $(".post-toc").remove();
+        }
+    })
+</script>
+    <article class="post">
+        <header>
+            <h1 class="post-title">iOS开发weak底层窥探</h1>
+        </header>
+        
+  <time datetime="2023-03-07T15:45:02Z" class="post-meta meta-date dt-published">
+    2023-03-07
+  </time>
+
+
+
+        
+        <div class="post-meta">
+            <span id="busuanzi_container_page_pv">&nbsp;|
+                <span id="busuanzi_value_page_pv"></span> <span>reads</span>
+            </span>
+        </div>
+        
+        
+        <div class="post-content">
+            <h1 id="weak底层原理">Weak底层原理</h1>
+<h2 id="1">1</h2>
+<p><code>weak</code>关键字修饰的对象指针是弱引用，指向的对象引用技术不会+1，并在对象被释放的时候自动指向nil。
+Weak修饰的对象指针，是维护一个<code>hash</code>表，<code>key</code>是所指向的对象指针，<code>Value</code>是weak指针的地址数组</p>
+<blockquote>
+<p>在<a href="https://opensource.apple.com/tarballs/">https://opensource.apple.com/tarballs/</a>
+中可以下载苹果开源源码。此处下载/objc4即可。（名称中数字越大，源码版本越新）</p>
+</blockquote>
+<pre tabindex="0"><code>_weak id weakPtr;
+NSObject *o = [[NSObject alloc] init];
+_weak id weakPtr = o;
+</code></pre><h2 id="2">2</h2>
+<p>创建weak引用的时候，会走到runtime的obj_initWeak方法，可以通过符号断点进行验证：</p>
+<pre tabindex="0"><code>// 初始化weak指针
+id objc_initWeak(id *location/* 弱指针地址 */, id newObj/* 对象指针*/) {
+    if (!newObj) {
+        *location = nil;
+        return nil;
+    }
+    // C++类模板方式
+    return storeWeak&lt;DontHaveOld/*false*/, DoHaveNew/*true*/, DoCrashIfDeallocating/*true*/&gt;
+        (location, (objc_object*)newObj);
+}
+</code></pre><p>objc_initWeak初始化的时候，传入的参数为：<code>DontHaveOld</code> <code>DoHaveNew</code> <code>DoCrashIfDeallocating</code>根据传入的参数不同来区别是新增weak指针对象、初始化weak指针对象、还是删除weak指针对象。</p>
+<h2 id="3">3</h2>
+<p>下面来看看storeWeak&lt;&gt;方法，源码：</p>
+<pre tabindex="0"><code>// Update a weak variable.
+// If HaveOld is true, the variable has an existing value
+//   that needs to be cleaned up. This value might be nil.
+// If HaveNew is true, there is a new value that needs to be
+//   assigned into the variable. This value might be nil.
+// If CrashIfDeallocating is true, the process is halted if newObj is
+//   deallocating or newObj&#39;s class does not support weak references.
+//   If CrashIfDeallocating is false, nil is stored instead.
+enum CrashIfDeallocating {
+    DontCrashIfDeallocating = false, DoCrashIfDeallocating = true
+};
+
+/*
+ 如果HaveOld为true，则该变量存在一个需要清理的值(这个值可能为nil)
+ 如果HaveNew为true，则需要将一个新值赋给该变量(这个值可能为nil)
+ 如果crashhifdeallocate为true，则当newObj正在回收或newObj的类不支持弱引用时，进程将停止。
+ 如果crashifdeallocate为false，则存储nil。
+ */
+template &lt;HaveOld haveOld, HaveNew haveNew, CrashIfDeallocating crashIfDeallocating&gt; static id storeWeak(id *location, objc_object *newObj) {
+    ASSERT(haveOld  ||  haveNew);//校验旧对象和新对象必须存其一
+    if (!haveNew) ASSERT(newObj == nil);//校验如果haveNew=true，newObj不能为nil
+
+    // 该过程用来更新弱引用指针的指向
+    // 初始化 previouslyInitializedClass 指针
+    Class previouslyInitializedClass = nil;
+    id oldObj;
+    
+    // 声明两个 SideTable
+    SideTable *oldTable;
+    SideTable *newTable;
+
+    // Acquire locks for old and new values.为旧值和新值获取锁。
+    // Order by lock address to prevent lock ordering problems.根据锁地址排序
+    // Retry if the old value changes underneath us.
+ retry:
+    if (haveOld) {
+        // 如果weak 指针之前指向过其他对象，取出这个旧对象
+        oldObj = *location;
+        // 以旧对象为 key，从全局 SideTables()中取出旧对象对应的 SideTable
+        oldTable = &amp;SideTables()[oldObj];
+    } else {
+        oldTable = nil;
+    }
+    if (haveNew) {
+        newTable = &amp;SideTables()[newObj];
+    } else {
+        newTable = nil;
+    }
+    
+    // 加锁操作，防止多线程中竞争冲突
+    SideTable::lockTwo&lt;haveOld, haveNew&gt;(oldTable, newTable);
+
+    //校验，如果旧值对不上 goto retry
+    if (haveOld  &amp;&amp;  *location != oldObj) {
+        SideTable::unlockTwo&lt;haveOld, haveNew&gt;(oldTable, newTable);
+        goto retry;
+    }
+
+    // Prevent a deadlock between the weak reference machinery 防止弱引用间死锁
+    // and the +initialize machinery by ensuring that no
+    // weakly-referenced object has an un-+initialized isa. 并且通过 +initialize 初始化构造器保证所有弱引用的isa 非空指向,防止+initialized和弱引用引起是死锁
+    if (haveNew  &amp;&amp;  newObj) {
+        // 获得新对象的 isa 指针
+        Class cls = newObj-&gt;getIsa();
+        if (cls != previouslyInitializedClass  &amp;&amp;  
+            !((objc_class *)cls)-&gt;isInitialized()) { // 判断 isa 非空且已经初始化
+            
+            SideTable::unlockTwo&lt;haveOld, haveNew&gt;(oldTable, newTable);
+            
+            // 对其 isa 指针进行初始化
+            class_initialize(cls, (id)newObj);
+
+            // If this class is finished with +initialize then we&#39;re good. 如果该类已经完成执行 +initialize 方法是最理想情况
+            // If this class is still running +initialize on this thread  如果该类 +initialize 在线程中
+            // (i.e. +initialize called storeWeak on an instance of itself) 例如 +initialize 正在调用 storeWeak 方法
+            // then we may proceed but it will appear initializing and 
+            // not yet initialized to the check above.
+            // Instead set previouslyInitializedClass to recognize it on retry. 需要手动对其增加保护策略，并设置 previouslyInitializedClass 指针进行标记
+            previouslyInitializedClass = cls;
+
+            goto retry;
+        }
+    }
+
+    // Clean up old value, if any. 清除旧值，
+    if (haveOld) {
+        // 取消注册已经注册的弱引用
+        weak_unregister_no_lock(&amp;oldTable-&gt;weak_table, oldObj, location);
+    }
+
+    // Assign new value, if any. 分配新值
+    if (haveNew) {
+        newObj = (objc_object *)
+            weak_register_no_lock(&amp;newTable-&gt;weak_table, (id)newObj, location, 
+                                  crashIfDeallocating);
+        // weak_register_no_lock returns nil if weak store should be rejected 如果弱引用被释放 weak_register_no_lock 方法返回 nil
+
+        // Set is-weakly-referenced bit in refcount table. 在引用计数表中设置若引用标记位
+        if (newObj  &amp;&amp;  !newObj-&gt;isTaggedPointer()) {
+            newObj-&gt;setWeaklyReferenced_nolock();
+        }
+
+        // Do not set *location anywhere else. That would introduce a race.之前不要设置 location 对象，这里需要更改指针指向
+        *location = (id)newObj;
+    }
+    else {
+        // No new value. The storage is not changed. 没有新值，则无需更改
+    }
+    
+    SideTable::unlockTwo&lt;haveOld, haveNew&gt;(oldTable, newTable);
+
+    return (id)newObj;
+}
+</code></pre><p>从上面storeWeak&lt;&gt;方法中，我们可以看出weak指针的相关逻辑：</p>
+<ol>
+<li>是否存在一个需要清理的值<code>hasOld</code>，还是需要新赋值给该该变量<code>hasNew</code></li>
+<li>根据<code>oldObj</code>和<code>newObj</code>从<code>SideTables</code>取出的旧值<code>SideTable</code>表和新值<code>SideTable</code>表</li>
+<li>保护弱引用的对象在+initialize()与类对象注册之后</li>
+<li>在<code>oldTable</code>的<code>weak_table_t</code>中清空之前的weak指针</li>
+<li>在<code>newTable</code>的<code>weak_table_t</code>中注册新的weak指针</li>
+<li>return<code>newObj</code></li>
+</ol>
+<h3 id="31">3.1</h3>
+<p>在storeWeak&lt;&gt;方法中，有一个全局SideTables()散列表，下面是对SideTables()的解读：</p>
+<pre tabindex="0"><code>static objc::ExplicitInit&lt;StripedMap&lt;SideTable&gt;&gt; SideTablesMap;
+
+static StripedMap&lt;SideTable&gt;&amp; SideTables() {
+    return SideTablesMap.get();
+}
+</code></pre><h3 id="32">3.2</h3>
+<p>函数体里面调用了一个全局的静态变量<code>SideTablesMap</code>的 <code>get()</code>方法，这个静态变量保存了所有的SideTable，是objc命名空间下的一个ExplicitInit类，它里面实现了get()方法，来返回<code>StripedMap</code>如下：</p>
+<pre tabindex="0"><code>Type &amp;get() {
+        return *reinterpret_cast&lt;Type *&gt;(_storage);
+}
+</code></pre><h3 id="33">3.3</h3>
+<p><code>StripedMap</code> 是一个以<code>void *p  (实际为objc_object *)</code>为 key，<code>PaddedT</code>为 value 的表，实现如下：</p>
+<pre tabindex="0"><code>template&lt;typename T&gt;
+class StripedMap {
+#if TARGET_OS_IPHONE &amp;&amp; !TARGET_OS_SIMULATOR
+    enum { StripeCount = 8 }; // 真机是8
+#else
+    enum { StripeCount = 64 };// 模拟器是64
+#endif
+
+    struct PaddedT {
+        T value alignas(CacheLineSize); //64
+    };
+
+    PaddedT array[StripeCount]; // 散列表
+
+    // 散列函数，通过对象地址计算出对应 PaddedT在数组中的下标
+    static unsigned int indexForPointer(const void *p) {
+        uintptr_t addr = reinterpret_cast&lt;uintptr_t&gt;(p);
+        return ((addr &gt;&gt; 4) ^ (addr &gt;&gt; 9)) % StripeCount;
+    }
+
+ public:
+    T&amp; operator[] (const void *p) { 
+        return array[indexForPointer(p)].value; 
+    }
+    const T&amp; operator[] (const void *p) const { 
+        return const_cast&lt;StripedMap&lt;T&gt;&gt;(this)[p]; 
+    }
+
+    // Shortcuts for StripedMaps of locks.
+    void lockAll() {
+        for (unsigned int i = 0; i &lt; StripeCount; i++) {
+            array[i].value.lock();
+        }
+    }
+
+    void unlockAll() {
+        for (unsigned int i = 0; i &lt; StripeCount; i++) {
+            array[i].value.unlock();
+        }
+    }
+
+    void forceResetAll() {
+        for (unsigned int i = 0; i &lt; StripeCount; i++) {
+            array[i].value.forceReset();
+        }
+    }
+
+    void defineLockOrder() {
+        for (unsigned int i = 1; i &lt; StripeCount; i++) {
+            lockdebug_lock_precedes_lock(&amp;array[i-1].value, &amp;array[i].value);
+        }
+    }
+
+    void precedeLock(const void *newlock) {
+        // assumes defineLockOrder is also called
+        lockdebug_lock_precedes_lock(&amp;array[StripeCount-1].value, newlock);
+    }
+
+    void succeedLock(const void *oldlock) {
+        // assumes defineLockOrder is also called
+        lockdebug_lock_precedes_lock(oldlock, &amp;array[0].value);
+    }
+
+    const void *getLock(int i) {
+        if (i &lt; StripeCount) return &amp;array[i].value;
+        else return nil;
+    }
+    
+#if DEBUG
+    StripedMap() {
+        // Verify alignment expectations.
+        uintptr_t base = (uintptr_t)&amp;array[0].value;
+        uintptr_t delta = (uintptr_t)&amp;array[1].value - base;
+        ASSERT(delta % CacheLineSize == 0);
+        ASSERT(base % CacheLineSize == 0);
+    }
+#else
+    constexpr StripedMap() {}
+#endif
+};
+</code></pre><p><code>StripedMap</code>维护了一个哈希表，以对象的地址作为参数通过<code>indexForPointer</code>方法计算出所在<code>SideTable</code>在哈希表中的下标</p>
+<h3 id="34">3.4</h3>
+<p><code>StripedMap</code>维护的哈希表中,存储的PaddedT结构体，结构体的<code>value</code>值就是<code>SideTable</code>，<code>SideTable</code>结构体如下：</p>
+<pre tabindex="0"><code>struct SideTable {
+    spinlock_t slock; // 保证原子操作的自旋锁
+    RefcountMap refcnts; // 引用计数hash表(协助isa指针的extra_rc共同引用技术的变量)
+    weak_table_t weak_table; // weak 引用全局 hash 表
+
+    SideTable() { // 构造函数
+        memset(&amp;weak_table, 0, sizeof(weak_table));
+    }
+
+    ~SideTable() { // 析构函数
+        _objc_fatal(&#34;Do not delete SideTable.&#34;);
+    }
+
+    void lock() { slock.lock(); }
+    void unlock() { slock.unlock(); }
+    void forceReset() { slock.forceReset(); }
+
+    // Address-ordered lock discipline for a pair of side tables.
+
+    template&lt;HaveOld, HaveNew&gt;
+    static void lockTwo(SideTable *lock1, SideTable *lock2);
+    template&lt;HaveOld, HaveNew&gt;
+    static void unlockTwo(SideTable *lock1, SideTable *lock2);
+};
+</code></pre><h3 id="35">3.5</h3>
+<p><code>SideTable</code>结构体内部有一个<code>weak_table_t weak_table</code></p>
+<pre tabindex="0"><code>// id对象作为key，weak_table_t结构体作为value
+struct weak_table_t {
+    weak_entry_t *weak_entries; // 保存了所有指向指针对象的weak指针
+    size_t    num_entries; // entries的数量
+    uintptr_t mask; // hash数组的长度-1
+    uintptr_t max_hash_displacement; // hashkey的 最大散列偏移
+};
+</code></pre><h3 id="36">3.6</h3>
+<p><code>weak_table_t</code>结构体中有一个<code>weak_entry_t</code>结构体数组，就是其内部维护的哈希表，<code>weak_entry_t</code>的结构体实现如下：</p>
+<pre tabindex="0"><code>/*
+ 存储在弱引用表中的内部结构。
+ 它维护并存储一个指向对象的弱引用散列集。
+ 如果out_of_line_ness != REFERRERS_OUT_OF_LINE，则该集合是一个小的内联数组。
+ */
+#define WEAK_INLINE_COUNT 4
+#define REFERRERS_OUT_OF_LINE 2
+
+struct weak_entry_t {
+    DisguisedPtr&lt;objc_object&gt; referent; // 弱引用的对象
+    union {
+        
+        struct {  (找到的资料是4，个人感觉上REFERRERS_OUT_OF_LINE代表的2，out_of_line_ness == 0b10 (0b10 = 2))
+            weak_referrer_t *referrers; // 二维指针数组,存储指向该对象的弱引用
+            uintptr_t        out_of_line_ness : 2;
+            uintptr_t        num_refs : PTR_MINUS_2; // 引用数值
+            uintptr_t        mask;
+            uintptr_t        max_hash_displacement;
+        };
+        
+        struct {
+            // out_of_line_ness field is low bits of inline_referrers[1]
+            weak_referrer_t  inline_referrers[WEAK_INLINE_COUNT]; // 存储指向该对象的弱引用数组
+        };
+    };
+
+    bool out_of_line() {
+        return (out_of_line_ness == REFERRERS_OUT_OF_LINE);
+    }
+
+    // 覆盖老数据
+    weak_entry_t&amp; operator=(const weak_entry_t&amp; other) {
+        memcpy(this, &amp;other, sizeof(other));
+        return *this;
+    }
+
+    // 构造方法
+    weak_entry_t(objc_object *newReferent, objc_object **newReferrer)
+        : referent(newReferent)
+    {
+        inline_referrers[0] = newReferrer;
+        for (int i = 1; i &lt; WEAK_INLINE_COUNT; i++) {
+            inline_referrers[i] = nil;
+        }
+    }
+};
+</code></pre><p>在上面的代码实现中可以看出，<code>weak_entry_t</code>结构体存放的是某个对象的所有弱引用指针，存放所有弱引用指针使用的是一个联合体，如果弱引用指针的数量不超过 4 个就用<code>inline_referrers</code>存储，否则用<code>referrers</code>存储</p>
+<h3 id="37">3.7</h3>
+<p><code>weak_entry_t</code>用于存放所有指向某个对象的 <code>weak</code> 指针地址，类型是<code>weak_entry_t</code>，实现如下:</p>
+<pre tabindex="0"><code>typedef DisguisedPtr&lt;objc_object *&gt; weak_referrer_t;
+</code></pre><h2 id="4">4</h2>
+<p>我们结合上面提到的<code>storeWeak</code>方法中进行具体分析，代码如下，</p>
+<pre tabindex="0"><code>template &lt;HaveOld haveOld, HaveNew haveNew,
+          CrashIfDeallocating crashIfDeallocating&gt; 
+storeWeak(id *location, objc_object *newObj)
+
+{
+    //校验旧对象和新对象必须存其一
+    ASSERT(haveOld  ||  haveNew);
+    //校验如果haveNew=true，newObj不能为nil
+    if (!haveNew) ASSERT(newObj == nil);
+
+    Class previouslyInitializedClass = nil;
+    id oldObj;
+    SideTable *oldTable;
+    SideTable *newTable;
+
+ retry:
+    if (haveOld) {
+        //如果weak 指针指向旧值，就取出旧值
+        oldObj = *location;
+        //以旧对象地址为 key取出旧的SideTable
+        oldTable = &amp;SideTables()[oldObj];
+    } else {
+        oldTable = nil;
+    }
+    if (haveNew) {
+     // 取出对应新的SideTable
+        newTable = &amp;SideTables()[newObj];
+    } else {
+        newTable = nil;
+    }
+    
+    //上锁
+    SideTable::lockTwo&lt;haveOld, haveNew&gt;(oldTable, newTable);
+    //校验，如果旧值对不上 goto retry
+    if (haveOld  &amp;&amp;  *location != oldObj) {
+        SideTable::unlockTwo&lt;haveOld, haveNew&gt;(oldTable, newTable);
+        goto retry;
+    }
+
+    //保证弱引用对象的isa非空，防止弱引用机制和+initialize 发生死锁
+    if (haveNew  &amp;&amp;  newObj) {
+        Class cls = newObj-&gt;getIsa();
+        if (cls != previouslyInitializedClass  &amp;&amp;  
+            !((objc_class *)cls)-&gt;isInitialized()) 
+        {
+            SideTable::unlockTwo&lt;haveOld, haveNew&gt;(oldTable, newTable);
+            //如果class没有初始化发送+initialized消息
+            class_initialize(cls, (id)newObj);
+
+            previouslyInitializedClass = cls;
+            //到这里class肯定已经初始化了，在走一遍
+            goto retry;
+        }
+    }
+
+    if (haveOld) {
+    //&lt;&lt;1&gt;&gt;如果weak 指针之前指向了其他对象，在这里清空
+        weak_unregister_no_lock(&amp;oldTable-&gt;weak_table, oldObj, location);
+    }
+
+    if (haveNew) {
+    //通过newObj和location生成一个新的weak_entry_t并插入到newObj的弱引用数组中（weak_entries）
+    //&lt;&lt;2&gt;&gt;
+        newObj = (objc_object *)
+        weak_register_no_lock(&amp;newTable-&gt;weak_table, (id)newObj, location, 
+        crashIfDeallocating);
+
+        // Set is-weakly-referenced bit in refcount table.
+        if (newObj  &amp;&amp;  !newObj-&gt;isTaggedPointer()) {
+           //&lt;&lt;3&gt;&gt;  设置 isa 的标志位
+           newObj-&gt;setWeaklyReferenced_nolock();
+        }
+
+        // Do not set *location anywhere else. That would introduce a race.
+        *location = (id)newObj;
+    }
+    else {
+        // No new value. The storage is not changed.
+    }
+    
+    SideTable::unlockTwo&lt;haveOld, haveNew&gt;(oldTable, newTable);
+
+    return (id)newObj;
+}
+</code></pre><h3 id="41">4.1</h3>
+<p>取消注册已经存在的弱引用指针</p>
+<pre tabindex="0"><code>void weak_unregister_no_lock(weak_table_t *weak_table, id referent_id/*oldObj*/, id *referrer_id/*location*/)
+</code></pre><p>上面的方法<code>weak_unregister_no_lock</code>主要是清除存储在<code>weak_entry_t</code>中的<code>weak_refrerrer_t</code>，如果删除后<code>weak_entry_t</code>中的数组为空，则将整个<code>weak_entry_t</code>从<code>weak_table_t</code>中移除，源码如下：</p>
+<pre tabindex="0"><code>// 取消注册已经注册的弱引用
+void weak_unregister_no_lock(weak_table_t *weak_table, id referent_id/*oldObj*/, id *referrer_id/*location*/) {
+    objc_object *referent = (objc_object *)referent_id;
+    objc_object **referrer = (objc_object **)referrer_id;
+
+    weak_entry_t *entry;
+
+    if (!referent) return;
+    // 查找referent对应的weak_entry_t
+    if ((entry = weak_entry_for_referent(weak_table, referent))) {
+        //如果entry存在，删除entry中的referrer
+        remove_referrer(entry, referrer); //
+        bool empty = true;
+        // 判断out_of_line的动态数组referrers中是否有值
+        if (entry-&gt;out_of_line()  &amp;&amp;  entry-&gt;num_refs != 0) {
+            empty = false;
+        }
+        else { //判断entry的定长数组inline_referrers中是否有值
+            for (size_t i = 0; i &lt; WEAK_INLINE_COUNT; i++) {
+                if (entry-&gt;inline_referrers[i]) {
+                    empty = false; 
+                    break;
+                }
+            }
+        }
+
+        if (empty) {//如果都是空的将entry从weak_table移除
+            weak_entry_remove(weak_table, entry);
+        }
+    }
+
+    // Do not set *referrer = nil. objc_storeWeak() requires that the 
+    // value not change.
+}
+</code></pre><h3 id="42">4.2</h3>
+<p>查找referent对应的<code>weak_entry_t``weak_entry_for_referent</code></p>
+<pre tabindex="0"><code>static weak_entry_t *
+weak_entry_for_referent(weak_table_t *weak_table, objc_object *referent)
+{
+    ASSERT(referent);
+
+    // 获取所有的weak_entry_t数组
+    weak_entry_t *weak_entries = weak_table-&gt;weak_entries;
+
+    if (!weak_entries) return nil;
+
+    size_t begin = hash_pointer(referent) &amp; weak_table-&gt;mask;
+    size_t index = begin;
+    size_t hash_displacement = 0;
+    // 通过对对象指针的哈希方法生成的值与 weak_table-&gt;mask 进行 BITMASK 操作得到一个起始值
+    while (weak_table-&gt;weak_entries[index].referent != referent) {
+        index = (index+1) &amp; weak_table-&gt;mask; // hash表取下一个（index+1后&amp;运算）
+        if (index == begin) bad_weak_table(weak_table-&gt;weak_entries);
+        hash_displacement++;
+        if (hash_displacement &gt; weak_table-&gt;max_hash_displacement) {
+            return nil;
+        }
+    }
+    
+    return &amp;weak_table-&gt;weak_entries[index];
+}
+</code></pre><ul>
+<li>每次遍历如果没有在<code>weak_entries</code>中找到<code>referent</code>对应<code>的weak_entry_t</code>，就对<code>index + 1</code> 再进行<code>BITMASK</code> 操作，遍历一次就记录一次，直到大于<code>max_hash_displacement</code> 最大偏移值，返回<code> nil</code>，说明当前对象在<code>weak_table</code>的<code>weak_entries</code>中没有对应的<code>weak_entry_t</code>，也就是说没有弱引用</li>
+<li>如果某个<code>weak_entry_t</code>的r<code>eferent</code>和参数<code>referent</code>相等，说明找到了，返回这个<code>weak_entry_t</code></li>
+</ul>
+<h3 id="43">4.3</h3>
+<p>删除weak_entry中的referrer
+在上一步中我们找到了存储当前对象弱引用的<code>weak_entry_t</code>，现在我们就需要从<code>weak_entry_t</code>中的<code>referrers</code>或者<code>inline_referrers</code>中删除掉之前的弱引用，源码实现如下：</p>
+<pre tabindex="0"><code>static void remove_referrer(weak_entry_t *entry, objc_object **old_referrer)
+{
+    if (! entry-&gt;out_of_line()) {
+        for (size_t i = 0; i &lt; WEAK_INLINE_COUNT; i++) {
+            if (entry-&gt;inline_referrers[i] == old_referrer) {
+                entry-&gt;inline_referrers[i] = nil;
+                return;
+            }
+        }
+        _objc_inform(&#34;Attempted to unregister unknown __weak variable &#34;
+                     &#34;at %p. This is probably incorrect use of &#34;
+                     &#34;objc_storeWeak() and objc_loadWeak(). &#34;
+                     &#34;Break on objc_weak_error to debug.\n&#34;, 
+                     old_referrer);
+        objc_weak_error();
+        return;
+    }
+
+    size_t begin = w_hash_pointer(old_referrer) &amp; (entry-&gt;mask);
+    size_t index = begin;
+    size_t hash_displacement = 0;
+    
+    // 遍历
+    while (entry-&gt;referrers[index] != old_referrer) {
+        index = (index+1) &amp; entry-&gt;mask;
+        if (index == begin) bad_weak_table(entry);
+        hash_displacement++;
+        if (hash_displacement &gt; entry-&gt;max_hash_displacement) {
+            _objc_inform(&#34;Attempted to unregister unknown __weak variable &#34;
+                         &#34;at %p. This is probably incorrect use of &#34;
+                         &#34;objc_storeWeak() and objc_loadWeak(). &#34;
+                         &#34;Break on objc_weak_error to debug.\n&#34;, 
+                         old_referrer);
+            objc_weak_error();
+            return;
+        }
+    }
+    
+    // 将找到的对象清空
+    entry-&gt;referrers[index] = nil;
+    
+    // 总引用数减一
+    entry-&gt;num_refs--;
+}
+</code></pre><h3 id="44">4.4</h3>
+<p>如果entry中的数组为空，则从weak_table_t中删除entry</p>
+<pre tabindex="0"><code>static void weak_entry_remove(weak_table_t *weak_table, weak_entry_t *entry)
+{
+    // remove entry
+    // 如果使用的是动态数组，则释放动态数组的内存
+    if (entry-&gt;out_of_line()) free(entry-&gt;referrers);
+     // 以 entry 为起始地址的前sizeof(*entry)个字节区域清零
+    bzero(entry, sizeof(*entry));
+    // 全局 weak_table_t中的弱引用对象数量-1
+    weak_table-&gt;num_entries--;
+    // 收缩表大小
+    weak_compact_maybe(weak_table); // 指针表减少内存开销
+}
+</code></pre><h3 id="45">4.5</h3>
+<p>weak_compact_maybe()收缩表大小</p>
+<pre tabindex="0"><code>// Shrink the table if it is mostly empty.
+static void weak_compact_maybe(weak_table_t *weak_table)
+{
+    size_t old_size = TABLE_SIZE(weak_table);
+
+    // 如果 weak_table 的表大小占用超过 1024 个字节，并且 1/16比弱引用的对象的数量还多就收缩表的大小，使其不超过原来的 1/2
+    // Shrink if larger than 1024 buckets and at most 1/16 full.
+    if (old_size &gt;= 1024  &amp;&amp; old_size / 16 &gt;= weak_table-&gt;num_entries) {
+        weak_resize(weak_table, old_size / 8);
+        // leaves new table no more than 1/2 full
+    }
+}
+</code></pre><h3 id="46">4.6</h3>
+<p>weak_resize() weak_table_t表重新分配内存大小</p>
+<pre tabindex="0"><code>static void weak_resize(weak_table_t *weak_table, size_t new_size)
+{
+    // 获取旧的大小
+    size_t old_size = TABLE_SIZE(weak_table);
+
+    weak_entry_t *old_entries = weak_table-&gt;weak_entries;
+    // 使用新的大小创建新的new_entries
+    weak_entry_t *new_entries = (weak_entry_t *)
+        calloc(new_size, sizeof(weak_entry_t));
+
+    weak_table-&gt;mask = new_size - 1;
+    weak_table-&gt;weak_entries = new_entries;
+    weak_table-&gt;max_hash_displacement = 0;
+    weak_table-&gt;num_entries = 0;  // restored by weak_entry_insert below
+    
+    // 如果old_entries还有值，则进行遍历重新放入 weak_table 新的weak_entries中
+    if (old_entries) {
+        weak_entry_t *entry;
+        weak_entry_t *end = old_entries + old_size;
+        for (entry = old_entries; entry &lt; end; entry++) {
+            if (entry-&gt;referent) {
+                weak_entry_insert(weak_table, entry);
+            }
+        }
+        free(old_entries);
+    }
+}
+</code></pre><h3 id="47">4.7</h3>
+<p>生成新的weak_entry_t插入到weak_table_t中的weak_entries中,即<code>weak_register_no_lock()</code>，源码如下：</p>
+<pre tabindex="0"><code>// 注册一个新的弱引用 referrer:（上线）弱指针地址
+id weak_register_no_lock(weak_table_t *weak_table, id referent_id, id *referrer_id, bool crashIfDeallocating) {
+    objc_object *referent = (objc_object *)referent_id;
+    objc_object **referrer = (objc_object **)referrer_id;
+
+    // 如果为 nil，或者是TaggedPointer，则直接 return referent_id
+    if (!referent  ||  referent-&gt;isTaggedPointer()) return referent_id;
+
+    // ensure that the referenced object is viable
+    // 判断当前对象是否正在释放或是否支持弱引用
+    bool deallocating;
+    if (!referent-&gt;ISA()-&gt;hasCustomRR()) {
+        deallocating = referent-&gt;rootIsDeallocating(); // 是否正在释放
+    }
+    else {
+        BOOL (*allowsWeakReference)(objc_object *, SEL) = 
+            (BOOL(*)(objc_object *, SEL))
+            object_getMethodImplementation((id)referent, 
+                                           @selector(allowsWeakReference));
+        if ((IMP)allowsWeakReference == _objc_msgForward) {
+            return nil;
+        }
+        deallocating =
+            ! (*allowsWeakReference)(referent, @selector(allowsWeakReference));
+    }
+
+    if (deallocating) { // 正在释放
+        if (crashIfDeallocating) {
+            _objc_fatal(&#34;Cannot form weak reference to instance (%p) of &#34;
+                        &#34;class %s. It is possible that this object was &#34;
+                        &#34;over-released, or is in the process of deallocation.&#34;,
+                        (void*)referent, object_getClassName((id)referent));
+        } else {
+            return nil;
+        }
+    }
+
+    // now remember it and where it is being stored
+    // 判断如果对象已经在 weak_table 中存在弱引用记录，就在原来的 entry 上追加
+    weak_entry_t *entry;
+    if ((entry = weak_entry_for_referent(weak_table, referent))) { // weak_table中hash遍历查找referent
+        
+        // 如果存在,将弱引用指针和对象地址添加入hash表
+        append_referrer(entry, referrer);
+    } 
+    else {
+        
+        // 生成新的 new_entry 弱引用指针和对象地址
+        weak_entry_t new_entry(referent, referrer);
+        // 根据情况hash表扩容
+        weak_grow_maybe(weak_table);
+        // hash表插入新生成的new_entry
+        weak_entry_insert(weak_table, &amp;new_entry);
+    }
+
+    // Do not set *referrer. objc_storeWeak() requires that the 
+    // value not change.
+
+    return referent_id;
+}
+</code></pre><h3 id="48">4.8</h3>
+<p>在<code>weak_entry_t</code>中添加新的<code>weak_referrer_t</code></p>
+<pre tabindex="0"><code>static void append_referrer(weak_entry_t *entry, objc_object **new_referrer)
+{
+    if (! entry-&gt;out_of_line()) {
+        // Try to insert inline.
+        for (size_t i = 0; i &lt; WEAK_INLINE_COUNT; i++) {
+            if (entry-&gt;inline_referrers[i] == nil) {
+                entry-&gt;inline_referrers[i] = new_referrer;
+                return;
+            }
+        }
+
+        // Couldn&#39;t insert inline. Allocate out of line.
+        // 如果放不下了，就申请创建动态数组new_referrers
+        weak_referrer_t *new_referrers = (weak_referrer_t *)
+            calloc(WEAK_INLINE_COUNT, sizeof(weak_referrer_t));
+        // This constructed table is invalid, but grow_refs_and_insert
+        // will fix it and rehash it.
+        // 然后将之前定长数组的弱引用赋值给new_referrers
+        for (size_t i = 0; i &lt; WEAK_INLINE_COUNT; i++) {
+            new_referrers[i] = entry-&gt;inline_referrers[i];
+        }
+        entry-&gt;referrers = new_referrers;
+        entry-&gt;num_refs = WEAK_INLINE_COUNT;
+        entry-&gt;out_of_line_ness = REFERRERS_OUT_OF_LINE;
+        entry-&gt;mask = WEAK_INLINE_COUNT-1;
+        entry-&gt;max_hash_displacement = 0;
+    }
+
+    ASSERT(entry-&gt;out_of_line());
+
+    // 如果引用数量超过表大小的 3/4就自动扩容
+    if (entry-&gt;num_refs &gt;= TABLE_SIZE(entry) * 3/4) {
+        return grow_refs_and_insert(entry, new_referrer);
+    }
+    // 在 referrers 中找到一个值为 nil 的 weak_referrer_t，用新的弱引用对其赋值，并将引用数量+1
+    size_t begin = w_hash_pointer(new_referrer) &amp; (entry-&gt;mask);
+    size_t index = begin;
+    size_t hash_displacement = 0;
+    while (entry-&gt;referrers[index] != nil) {
+        hash_displacement++;
+        index = (index+1) &amp; entry-&gt;mask;
+        if (index == begin) bad_weak_table(entry);
+    }
+    if (hash_displacement &gt; entry-&gt;max_hash_displacement) {
+        entry-&gt;max_hash_displacement = hash_displacement;
+    }
+    weak_referrer_t &amp;ref = entry-&gt;referrers[index];
+    ref = new_referrer;
+    entry-&gt;num_refs++;
+}
+</code></pre><h3 id="49">4.9</h3>
+<p><code>grow_refs_and_insert</code>对某个对象的弱引用表扩容并强行插入</p>
+<pre tabindex="0"><code>__attribute__((noinline, used))
+static void grow_refs_and_insert(weak_entry_t *entry, 
+                                 objc_object **new_referrer)
+{
+    ASSERT(entry-&gt;out_of_line());
+
+    // 获取旧表的大小
+    size_t old_size = TABLE_SIZE(entry);
+    // 如果之前有旧表，则扩容为之前的 2 倍，否则为 8
+    size_t new_size = old_size ? old_size * 2 : 8;
+
+    // 获取当前对象所有弱引用指针的数量
+    size_t num_refs = entry-&gt;num_refs;
+    weak_referrer_t *old_refs = entry-&gt;referrers;
+    entry-&gt;mask = new_size - 1;
+    // mask 赋值
+    entry-&gt;referrers = (weak_referrer_t *)
+        calloc(TABLE_SIZE(entry), sizeof(weak_referrer_t));
+    entry-&gt;num_refs = 0;
+    entry-&gt;max_hash_displacement = 0;
+    
+    // 将老的弱引用指针地址放到新的里边
+    for (size_t i = 0; i &lt; old_size &amp;&amp; num_refs &gt; 0; i++) {
+        if (old_refs[i] != nil) {
+            append_referrer(entry, old_refs[i]);
+            num_refs--;
+        }
+    }
+    // Insert
+    // 最后将新的弱引用指针地址进行插入
+    append_referrer(entry, new_referrer);
+    if (old_refs) free(old_refs);
+}
+</code></pre><h3 id="410">4.10</h3>
+<p>构造函数<code>new_entry()</code>创建新的entry</p>
+<pre tabindex="0"><code>// 构造方法
+    weak_entry_t(objc_object *newReferent, objc_object **newReferrer)
+        : referent(newReferent)
+    {
+        inline_referrers[0] = newReferrer;
+        for (int i = 1; i &lt; WEAK_INLINE_COUNT; i++) {
+            inline_referrers[i] = nil;
+        }
+    }
+</code></pre><h3 id="411">4.11</h3>
+<p><code>weak_grow_maybe()</code> ，<code>weak_table</code> 扩容</p>
+<pre tabindex="0"><code>static void weak_grow_maybe(weak_table_t *weak_table)
+{
+    size_t old_size = TABLE_SIZE(weak_table);
+
+    // Grow if at least 3/4 full.
+    // 如果超过 3/4 则进行扩容，如果之前有，则为原来的 2 倍，否则为 64
+    if (weak_table-&gt;num_entries &gt;= old_size * 3 / 4) {
+        weak_resize(weak_table, old_size ? old_size*2 : 64);
+    }
+}
+</code></pre><h3 id="412">4.12</h3>
+<p>在weak_table_t中插入weak_entry_t</p>
+<pre tabindex="0"><code>static void weak_entry_insert(weak_table_t *weak_table, weak_entry_t *new_entry)
+{
+    weak_entry_t *weak_entries = weak_table-&gt;weak_entries;
+    ASSERT(weak_entries != nil);
+
+    // 计算出要插入的位置
+    size_t begin = hash_pointer(new_entry-&gt;referent) &amp; (weak_table-&gt;mask);
+    size_t index = begin;
+    size_t hash_displacement = 0;
+    while (weak_entries[index].referent != nil) {
+        index = (index+1) &amp; weak_table-&gt;mask;
+        if (index == begin) bad_weak_table(weak_entries);
+        hash_displacement++;
+    }
+
+    // 进行赋值，数量自增
+    weak_entries[index] = *new_entry;
+    weak_table-&gt;num_entries++;
+
+    // 对最大max_hash_displacement偏移值进行赋值，这也是查找时遍历的临界点
+    if (hash_displacement &gt; weak_table-&gt;max_hash_displacement) {
+        weak_table-&gt;max_hash_displacement = hash_displacement;
+    }
+}
+</code></pre><h3 id="413">4.13</h3>
+<p>设置弱引用的标记位<code>setWeaklyReferenced_nolock</code></p>
+<pre tabindex="0"><code>inline void
+objc_object::setWeaklyReferenced_nolock()
+{
+ retry:
+    // 获取对象的 isa 指针
+    isa_t oldisa = LoadExclusive(&amp;isa.bits);
+    isa_t newisa = oldisa;
+    if (slowpath(!newisa.nonpointer)) {
+        ClearExclusive(&amp;isa.bits);
+        sidetable_setWeaklyReferenced_nolock();
+        return;
+    }
+    // 如果对象isa 的弱引用标志位已经是 true 了，则不进行操作
+    if (newisa.weakly_referenced) {
+        ClearExclusive(&amp;isa.bits);
+        return;
+    }
+    // 弱引用标志位设为 true
+    newisa.weakly_referenced = true;
+    if (!StoreExclusive(&amp;isa.bits, oldisa.bits, newisa.bits)) goto retry;
+}
+</code></pre><h2 id="5">5</h2>
+<p>weak修饰对象的释放</p>
+<pre tabindex="0"><code>- (void)dealloc {
+    _objc_rootDealloc(self);
+}
+
+⬇
+
+void _objc_rootDealloc(id obj) {
+    ASSERT(obj);
+
+    obj-&gt;rootDealloc();
+}
+
+⬇
+
+inline void objc_object::rootDealloc() {
+    if (isTaggedPointer()) return;  // fixme necessary?
+    
+    // 没指针、没弱引用、没关联对象、没c++析构、没弱引用表retain_count，直接释放
+    if (fastpath(isa.nonpointer  &amp;&amp;  
+                 !isa.weakly_referenced  &amp;&amp;  
+                 !isa.has_assoc  &amp;&amp;  
+                 !isa.has_cxx_dtor  &amp;&amp;  
+                 !isa.has_sidetable_rc))
+    {
+        assert(!sidetable_present());
+        free(this);
+    } 
+    else {
+        object_dispose((id)this);
+    }
+}
+
+⬇
+
+id  object_dispose(id obj) {
+    if (!obj) return nil;
+
+    objc_destructInstance(obj);    
+    free(obj);
+
+    return nil;
+}
+
+⬇
+
+void *objc_destructInstance(id obj)  {
+    if (obj) {
+        // Read all of the flags at once for performance.
+        bool cxx = obj-&gt;hasCxxDtor();
+        bool assoc = obj-&gt;hasAssociatedObjects();
+
+        // This order is important.
+        if (cxx) object_cxxDestruct(obj);
+        if (assoc) _object_remove_assocations(obj);
+        obj-&gt;clearDeallocating();
+    }
+
+    return obj;
+}
+
+⬇
+
+inline void 
+objc_object::clearDeallocating() {
+    if (slowpath(!isa.nonpointer)) {
+        // Slow path for raw pointer isa.
+        sidetable_clearDeallocating();
+    }
+    else if (slowpath(isa.weakly_referenced  ||  isa.has_sidetable_rc)) {
+        // Slow path for non-pointer isa with weak refs and/or side table data.
+        clearDeallocating_slow();
+    }
+
+    assert(!sidetable_present());
+}
+
+⬇
+
+NEVER_INLINE void objc_object::clearDeallocating_slow()
+{
+    ASSERT(isa.nonpointer  &amp;&amp;  (isa.weakly_referenced || isa.has_sidetable_rc));
+
+    SideTable&amp; table = SideTables()[this];
+    table.lock();
+    if (isa.weakly_referenced) {
+        weak_clear_no_lock(&amp;table.weak_table, (id)this);
+    }
+    if (isa.has_sidetable_rc) {
+        table.refcnts.erase(this);
+    }
+    table.unlock();
+}
+</code></pre><p>最后对象被指向的弱指针释放</p>
+<pre tabindex="0"><code>void 
+weak_clear_no_lock(weak_table_t *weak_table, id referent_id) 
+{
+    objc_object *referent = (objc_object *)referent_id;
+
+    // 获取当前对象所在的weak_entry_t
+    weak_entry_t *entry = weak_entry_for_referent(weak_table, referent);
+    if (entry == nil) {
+        /// XXX shouldn&#39;t happen, but does with mismatched CF/objc
+        //printf(&#34;XXX no entry for clear deallocating %p\n&#34;, referent);
+        return;
+    }
+
+    // zero out references
+    weak_referrer_t *referrers;
+    size_t count;
+    
+    if (entry-&gt;out_of_line()) {
+        referrers = entry-&gt;referrers;
+        count = TABLE_SIZE(entry);
+    } 
+    else {
+        referrers = entry-&gt;inline_referrers;
+        count = WEAK_INLINE_COUNT;
+    }
+    
+    // 遍历entry的 referrers 数组，将弱引用指针全置为 nil
+    for (size_t i = 0; i &lt; count; ++i) {
+        objc_object **referrer = referrers[i];
+        if (referrer) {
+            if (*referrer == referent) {
+                *referrer = nil;
+            }
+            else if (*referrer) {
+                _objc_inform(&#34;__weak variable at %p holds %p instead of %p. &#34;
+                             &#34;This is probably incorrect use of &#34;
+                             &#34;objc_storeWeak() and objc_loadWeak(). &#34;
+                             &#34;Break on objc_weak_error to debug.\n&#34;, 
+                             referrer, (void*)*referrer, (void*)referent);
+                objc_weak_error();
+            }
+        }
+    }
+    
+    // 从 weak_table中移除当前对象对应的 entry
+    weak_entry_remove(weak_table, entry);
+}
+</code></pre>
+        </div>
+
+        
+<div class="post-archive">
+    <ul class="post-copyright">
+        <li><strong>Author: </strong><a rel="author" href="https://YuMars.github.io">YuMars</a></li>
+        <li style="word-break:break-all"><strong>Link: </strong><a href="https://YuMars.github.io/post/iOS%E5%BC%80%E5%8F%91weak%E5%BA%95%E5%B1%82%E7%AA%A5%E6%8E%A2/">https://YuMars.github.io/post/iOS%E5%BC%80%E5%8F%91weak%E5%BA%95%E5%B1%82%E7%AA%A5%E6%8E%A2/</a></li>
+        <li><strong>License: </strong>This work is under a <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/">知识共享署名-非商业性使用-禁止演绎 4.0 国际许可协议</a>. Kindly fulfill the requirements of the aforementioned License when adapting or creating a derivative of this work.</li>
+    </ul>
+</div>
+<br/>
+
+
+
+        
+
+<div class="post-archive">
+    <h2>See Also</h2>
+    <ul class="listing">
+        
+        <li><a href="/archives/">Archives</a></li>
+        
+        <li><a href="/post/macOS&#43;Hugo&#43;Github%E6%90%AD%E5%BB%BAblog/">macOS&#43;Hugo&#43;Github搭建blog</a></li>
+        
+    </ul>
+</div>
+
+
+        <div class="post-meta meta-tags">
+            
+            No tags
+            
+        </div>
+    </article>
+    
+    <div id="disqus_thread"></div>
+<script type="application/javascript">
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "yourdiscussshortname" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+    
+    
+    <div class="post bg-white">
+      <script src="https://utteranc.es/client.js"
+            repo= "your github repo"
+            issue-term="pathname"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+      </script>
+    </div>
+    
+    
+    
+
+</div>
+
+                    <footer id="footer">
+    <div>
+        &copy; 2024 <a href="https://YuMars.github.io">YuMars的博客 By YuMars</a>
+        
+    </div>
+    <br />
+    <div>
+        <div class="github-badge">
+            <a href="https://gohugo.io/" target="_black" rel="nofollow"><span class="badge-subject">Powered by</span><span class="badge-value bg-blue">Hugo</span></a>
+        </div>
+        
+        <div class="github-badge">
+            <a href="https://github.com/flysnow-org/maupassant-hugo" target="_black"><span class="badge-subject">Theme</span><span class="badge-value bg-yellowgreen">Maupassant</span></a>
+        </div>
+    </div>
+</footer>
+
+
+    
+    
+    <script type="text/javascript">
+        window.MathJax = {
+            tex2jax: {
+                inlineMath: [['$', '$']],
+                processEscapes: true
+                }
+            };
+    </script>
+    <script src='//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src='/js/totop.js?v=0.0.0' async=""></script>
+<style type="text/css">
+div.highlight {
+    position: relative;
+    margin: 1em 0px;
+}
+
+.copy-code {
+    display: none;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(78, 78, 78, 0.8);
+    border-radius: var(--radius);
+    padding: 0 5px;
+    font: inherit;
+    user-select: none;
+    cursor: pointer;
+    border: 0;
+    --radius: 8px;
+}
+
+div.highlight:hover .copy-code,pre:hover .copy-code {
+    display: block;
+}
+
+</style>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+
+
+    <script type="text/javascript" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+
+
+
+
+    <script src='/js/douban.js'></script>
+
+                </div>
+
+                <div id="secondary">
+    <section class="widget">
+        <form id="search" action='https://YuMars.github.io/search' method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+      
+      <input type="text" name="q" maxlength="20" placeholder="Search">
+      <input type="hidden" name="sitesearch" value="https://YuMars.github.io">
+      <button type="submit" class="submit icon-search"></button>
+</form>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title">Latest articles</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://YuMars.github.io/post/iOS%E5%BC%80%E5%8F%91weak%E5%BA%95%E5%B1%82%E7%AA%A5%E6%8E%A2/" title="iOS开发weak底层窥探" target="_blank">iOS开发weak底层窥探</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/macOS&#43;Hugo&#43;Github%E6%90%AD%E5%BB%BAblog/" title="macOS&#43;Hugo&#43;Github搭建blog" target="_blank">macOS&#43;Hugo&#43;Github搭建blog</a>
+    </li>
+    
+</ul>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title"><a href='/categories/'>Categories</a></h3>
+<ul class="widget-list">
+    
+</ul>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title"><a href='/tags/'>Tags</a></h3>
+<div class="tagcloud">
+    
+</div>
+    </section>
+
+    
+<section class="widget">
+    <h3 class="widget-title">Links</h3>
+    <ul class="widget-list">
+        
+        <li>
+            <a target="_blank" href="https://www.baidu.com/" title="链接Title">链接Name</a>
+        </li>
+        
+        <li>
+            <a target="_blank" href="http://yuedu.baidu.com/ebook/14a722970740be1e640e9a3e" title="Android Gradle权威指南">Android Gradle权威指南</a>
+        </li>
+        
+    </ul>
+</section>
+
+
+    <section class="widget">
+        <h3 class="widget-title">Meta</h3>
+        <ul class="widget-list">
+            <li><a href="https://YuMars.github.io/index.xml">RSS</a></li>
+        </ul>
+    </section>
+</div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
