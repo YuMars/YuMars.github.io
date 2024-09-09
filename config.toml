@@ -20,7 +20,7 @@ disqusShortname = "yourdiscussshortname"  ## 是否开启disqus评论，不要�
 
 [params]
   author = "YuMars"
-  subtitle = "不拔之志"
+  subtitle = "事细自问三次，还可以做的更好吗，还可以做的更深入吗，还可以举一反三吗"
   keywords = "Swift,Objective-C,博客,项目管理"
   description = "IT互联网，包括但不限于Swift语言等"
   busuanzi = true #启用不算子网页统计

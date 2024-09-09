@@ -6,9 +6,18 @@
     <description>Recent content on YuMars的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
-    <lastBuildDate>Sat, 09 Sep 2023 19:31:49 +0800</lastBuildDate><atom:link href="https://YuMars.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 29 Sep 2023 23:58:27 +0800</lastBuildDate><atom:link href="https://YuMars.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>@Synchroinzed</title>
+      <title>转生之KVO&amp;KVO再了解一次</title>
+      <link>https://YuMars.github.io/post/%E8%BD%AC%E7%94%9F%E4%B9%8BKVO_KVO%E5%86%8D%E4%BA%86%E8%A7%A3%E4%B8%80%E6%AC%A1/</link>
+      <pubDate>Fri, 29 Sep 2023 23:58:27 +0800</pubDate>
+      
+      <guid>https://YuMars.github.io/post/%E8%BD%AC%E7%94%9F%E4%B9%8BKVO_KVO%E5%86%8D%E4%BA%86%E8%A7%A3%E4%B8%80%E6%AC%A1/</guid>
+      <description>KVO KVO全称Key-Value-Observing,俗称&amp;quot;键值监听&amp;quot;，可以用于监听某个对象属性值的改变 使用KVO监听后,会生成NSKVONotifying_类名的一个类,是一个继承自原先类的子类，由runtime在运行过程中动态生成的一个类 重写了class,d</description>
+    </item>
+    
+    <item>
+      <title>@synchroinzed</title>
       <link>https://YuMars.github.io/post/@synchroinzed/</link>
       <pubDate>Sat, 09 Sep 2023 19:31:49 +0800</pubDate>
       

@@ -9,20 +9,20 @@
     <meta name="referrer" content="no-referrer-when-downgrade">
     
 
-    <title>不谈Mach-O，项目中实实在在的快速瘦身 | YuMars的博客</title>
-    <meta property="og:title" content="不谈Mach-O，项目中实实在在的快速瘦身 - YuMars的博客">
+    <title>转生之KVO&amp;KVO再了解一次 | YuMars的博客</title>
+    <meta property="og:title" content="转生之KVO&amp;KVO再了解一次 - YuMars的博客">
     <meta property="og:type" content="article">
         
-    <meta property="article:published_time" content='2023-04-04T14:22:20&#43;08:00'>
+    <meta property="article:published_time" content='2023-09-29T23:58:27&#43;08:00'>
         
         
-    <meta property="article:modified_time" content='2023-04-04T14:22:20&#43;08:00'>
+    <meta property="article:modified_time" content='2023-09-29T23:58:27&#43;08:00'>
         
     <meta name="Keywords" content="Swift,Objective-C,博客,项目管理">
-    <meta name="description" content="不谈Mach-O，项目中实实在在的快速瘦身">
+    <meta name="description" content="转生之KVO&amp;KVO再了解一次">
         
     <meta name="author" content="YuMars">
-    <meta property="og:url" content="https://YuMars.github.io/post/%E4%B8%8D%E8%B0%88Mach-O%E9%83%BD%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%AE%9E%E5%AE%9E%E5%9C%A8%E5%9C%A8%E7%9A%84%E5%BF%AB%E9%80%9F%E7%98%A6%E8%BA%AB/">
+    <meta property="og:url" content="https://YuMars.github.io/post/%E8%BD%AC%E7%94%9F%E4%B9%8BKVO_KVO%E5%86%8D%E4%BA%86%E8%A7%A3%E4%B8%80%E6%AC%A1/">
     <link rel="shortcut icon" href='/favicon.ico'  type="image/x-icon">
 
     <link rel="stylesheet" href='/css/normalize.css'>
@@ -144,17 +144,11 @@
     <div class="post-toc-content">
         <nav id="TableOfContents">
   <ul>
-    <li><a href="#包体瘦身的前提缘由">包体瘦身的前提，缘由</a></li>
-    <li><a href="#急于求成之外的情况下最好能了解ipa包的构成-mach-o结构">急于求成之外的情况下最好能了解ipa包的构成-Mach-O结构</a>
-      <ul>
-        <li><a href="#1资源图片">1.资源（图片）</a></li>
-        <li><a href="#2可执行文件瘦身">2.可执行文件瘦身</a></li>
-        <li><a href="#3去掉无用的armv7框架">3.去掉无用的armv7框架</a></li>
-        <li><a href="#4业务上多变的功能做成h5">4.业务上多变的功能做成H5</a></li>
-        <li><a href="#5了解了每个设置的意思个人觉得对于一个普通的app来说可以这样配置这些设置">5.了解了每个设置的意思，个人觉得对于一个普通的app来说可以这样配置这些设置：</a></li>
-        <li><a href="#6build-setting配置项的修改">6.Build Setting配置项的修改</a></li>
-      </ul>
-    </li>
+    <li><a href="#setvalue顺序">setValue顺序</a></li>
+    <li><a href="#getvalue顺序">getValue顺序</a></li>
+    <li><a href="#q-kvc赋值的过程是什么原理是什么">Q: KVC赋值的过程是什么？原理是什么？</a></li>
+    <li><a href="#q哪些情况下使用kvo会崩溃怎么保护崩溃">Q：哪些情况下使用KVO会崩溃，怎么保护崩溃</a></li>
+    <li><a href="#5kvo的优缺点">5.KVO的优缺点</a></li>
   </ul>
 </nav>
     </div>
@@ -192,11 +186,11 @@
 </script>
     <article class="post">
         <header>
-            <h1 class="post-title">不谈Mach-O，项目中实实在在的快速瘦身</h1>
+            <h1 class="post-title">转生之KVO&amp;KVO再了解一次</h1>
         </header>
         
-  <time datetime="2023-04-04T06:22:20Z" class="post-meta meta-date dt-published">
-    2023-04-04
+  <time datetime="2023-09-29T15:58:27Z" class="post-meta meta-date dt-published">
+    2023-09-29
   </time>
 
 
@@ -210,41 +204,105 @@
         
         
         <div class="post-content">
-            <h1 id="ipa瘦身">IPA瘦身</h1>
-<h2 id="包体瘦身的前提缘由">包体瘦身的前提，缘由</h2>
-<p>苹果近几年销售的手机存储空间配置越来越大，同时也在2017年9月和最近2019年6月分别修改了在移动流量下载上线为150M和200M。但是包体瘦身对于用户来说，可以为用户节省手机存储空间，同时也减少了下载app的时间。如果包体太大上架到app store，用户没办法在非Wifi环境下下载app。是在WWDC中有专门的App Thinning内容。</p>
-<p>随着app的版本迭代，包体大小从80M上升到了超过150M，导致了用户无法在非Wifi环境下下载app（当时app store移动流量下ipa下载上限是150M），影响了用户的使用，所以专门调研了ipa瘦身的相关问题，实践了很多办法，将ipa的大小降低到了差不多100M上下。</p>
+            <h1 id="kvo">KVO</h1>
+<p>KVO全称Key-Value-Observing,俗称&quot;键值监听&quot;，可以用于监听某个对象属性值的改变</p>
+<p><code>使用KVO监听后,会生成NSKVONotifying_类名的一个类,是一个继承自原先类的子类，由runtime在运行过程中动态生成的一个类</code>
+重写了<code>class</code>,<code>dealloc</code>, <code>_isKVO</code>三个方法</p>
+<ul>
+<li><code>NSKVONotifying_Person</code>是<code>Person</code>的一个子类</li>
+<li><code>[person setAge:]</code> 调用了<code>[NSKVONotifying_Person setage:]</code>,调用了<code>_NSSetIntValueAndNotify</code></li>
+</ul>
 <blockquote>
-<p>ipa瘦身是一个持续的过程</p>
+<ul>
+<li>p (IMP)+内存地址 可以打印调用的方法名</li>
+</ul>
 </blockquote>
-<h2 id="急于求成之外的情况下最好能了解ipa包的构成-mach-o结构">急于求成之外的情况下最好能了解ipa包的构成-Mach-O结构</h2>
-<p>下面我们快速解决ipa包体积大小问题。项目中Product安装包的解压后的目录结构有资源图片和Mach-O代码。只要删除任何一项，包体大小都是实打实的能变小的，下面简单粗暴速成来提供解决思路。</p>
-<h3 id="1资源图片">1.资源（图片）</h3>
-<pre><code>1.优化压缩png（展开说动画资源），删除重复资源，删除无用资源
-图片做压缩（放在resource 和 image.asset的区别）
-2.本地资源放占位图，然后从服务端获取
-3.序列帧动画制作成svga效果，通过下载
-</code></pre>
-<h3 id="2可执行文件瘦身">2.可执行文件瘦身</h3>
-<pre><code>1.删除无用的类（多人维护的情况下，appcode）
-2.整理第三方库瘦身（第三方类库，小功能把整个库拿进来）
-3.静态库瘦身（去掉多余的armv7）
-4.删除无用的方法，属性，不用的函数，重复代码
-5.对linkmap做脚本监控
-</code></pre>
-<h3 id="3去掉无用的armv7框架">3.去掉无用的armv7框架</h3>
-<h3 id="4业务上多变的功能做成h5">4.业务上多变的功能做成H5</h3>
-<h3 id="5了解了每个设置的意思个人觉得对于一个普通的app来说可以这样配置这些设置">5.了解了每个设置的意思，个人觉得对于一个普通的app来说可以这样配置这些设置：</h3>
-<h3 id="6build-setting配置项的修改">6.Build Setting配置项的修改</h3>
-<ol>
-<li>Generate Debug Symbols：DEBUG和RELEASE下均设为YES（和Xcode默认一致）；</li>
-<li>Debug Information Level：DEBUG和RELEASE下均设为Compiler default（和Xcode默认一致）；</li>
-<li>Deployment Postprocessing：DEBUG下设为NO，RELEASE下设为YES，这样RELEASE模式下就可以去除符号缩减app的大小（但是似乎设置为YES后，会牵涉一些和bitcode有关的设置，对于bitcode暂时还不太了解(´･_･`)）；</li>
-<li>Strip Linked Product：DEBUG下设为NO，RELEASE下设为YES，用于RELEASE模式下缩减app的大小；</li>
-<li>Strip Style：DEBUG和RELEASE下均设为All Symbols（和Xcode默认一致）；</li>
-<li>Strip Debug Symbols During Copy：DEBUG下设为NO，RELEASE下设为YES；</li>
-<li>Debug Information Format：DEBUG下设为DWARF，RELEASE下设为DWARF with dSYM File，dSYM文件需要用于符号化crash log（和Xcode默认一致）；</li>
-</ol>
+<p><code>_NSSet*ValueAndNotify</code>的内部实现:</p>
+<ul>
+<li>[self willChangeValueForKey:@&quot;&quot;];</li>
+<li>[super setValue:];</li>
+<li>[self didChangeValueForKey:@&quot;&quot;];</li>
+</ul>
+<p>Q: KVO的本质是什么
+A: 利用Runtime</p>
+<ul>
+<li>1.API动态生成一个子类，并且让instance对象的isa指向这个全新的子类，子类NSKVONotifying_类名</li>
+<li>2.当修改instance对象的属性时，会调用Foundation的_NSSet*ValueaAndNofity函数</li>
+<li>_NSSet*ValueAndNotify:{ 1.willChangeValueForKey: 2.[super setValue:] 3.didChangeValueForKey:}</li>
+<li>3.内部调用observeValueForKeyPath:ofObject:change:context:</li>
+</ul>
+<p>Q: 如何手动触发KVO
+A:</p>
+<ul>
+<li>[self willChangeValueForKey:@&quot;&quot;]</li>
+<li>[self didChangeValueForKey:@&quot;&quot;]</li>
+</ul>
+<h1 id="kvc">KVC</h1>
+<p>KVC全称Key-Value Coding，俗称&quot;键值编码&quot;，可以通过一个key来访问某个属性
+<code>setValue:forKey:</code>
+<code>setValue:forKeyPath:</code>
+<code>valueForKey:</code>
+<code>valueForKeyPath:</code></p>
+<p>[self.person setValue:value forKeyPath:@&ldquo;cat.age&rdquo;]</p>
+<p>Q: 通过KVC修改属性会触发KVO吗
+A: 会触发(通过KVC修改成员变量也会触发)</p>
+<h2 id="setvalue顺序">setValue顺序</h2>
+<p>setValue:forKey:顺序
+1.setKey: _setKey:顺序查找方法
+2.accessInstanceVariablesDirectly(是否允许直接访问成员变量)<br>
+-&gt;第一种没找的情况
+2.1 设置No后，会调用setValue:forUndefinedKey:
+2.2 设置YES后，按照_key,_isKey,key,isKey的顺序查找成员变量，失败后会调用setValue:forUndefinedKey:</p>
+<blockquote>
+<p>{
+<code>setKey:</code>
+<code>_setKey:</code>
+<code>_key</code>
+<code>_isKey</code>
+<code>key</code>
+<code>isKey</code>
+}</p>
+</blockquote>
+<h2 id="getvalue顺序">getValue顺序</h2>
+<p>valueForKey:顺序
+1.getKey,key,isKey,_key顺序查找方法
+2.accessInstanceVariablesDirectly(是否允许直接访问成员变量) -&gt; 第一种没找到的情况
+2.1 设置NO后，会调用valueForUndefinedKey:
+2.2 设置YES后，按照_key, _isKey, key, isKey的顺序查找成员变量</p>
+<blockquote>
+<p>{
+<code>getKey:</code>
+<code>key:</code>
+<code>isKey:</code>
+<code>_key:</code>
+<code>_key</code>
+<code>_isKey</code>
+<code>key</code>
+<code>isKey</code>
+}</p>
+</blockquote>
+<h2 id="q-kvc赋值的过程是什么原理是什么">Q: KVC赋值的过程是什么？原理是什么？</h2>
+<p>A: 上面的顺序
+getter流程： getKey:  key:  isKey:  _key: _key  _isKey  key  isKey 顺序查找
+setter流程：setKey:  _setKey:  _key  _isKey  key  isKey 顺序查找</p>
+<h2 id="q哪些情况下使用kvo会崩溃怎么保护崩溃">Q：哪些情况下使用KVO会崩溃，怎么保护崩溃</h2>
+<p>1.dealloc没有移除KVO观察者。解决方案：创建一个中间对象，将其最为某个属性的观察者，然后dealloc的时候去除观察者。调用者是持有中间对象，调用者释放，中间对象也就释放，dealloc也就移除观察者
+2.多次重复移除同一属性的观察者，或者移除了未添加过的观察者
+3.被观察者提前被释放，被观察者在dealloc时仍然注册着KVO，导致崩溃。例如：被观察者是局部变量，weak
+4.添加观察者，但是未实现+observeValueForKeyPath:ofObject:change:context:方法，导致崩溃
+5.添加或者移除时，keyPath:nil ，导致崩溃</p>
+<h2 id="5kvo的优缺点">5.KVO的优缺点</h2>
+<p>优点：
+1.运动了设计模式：观察者模式
+2.支持多个观察者观察同一属性，或者同一观察者监听不同属性
+3.不需要实现属性变化的通知发送
+4.对创建的对象的状态改变做出响应，不要改变对象的实现（比如SDK对象）
+5.能够提供观察的属性新值和旧值
+6.可以用key path来观察属性，所以可以观察嵌套对象
+7.完成了对观察对象的抽象，因为不需要额外的代码来允许观察值能够被观察</p>
+<p>缺点：
+1.观察的属性键值硬编码（字符串），编译器无法发出警告
+2.允许一对多观察属性，回调方法中可能有很多分支情况</p>
 
         </div>
 
@@ -252,7 +310,7 @@
 <div class="post-archive">
     <ul class="post-copyright">
         <li><strong>Author: </strong><a rel="author" href="https://YuMars.github.io">YuMars</a></li>
-        <li style="word-break:break-all"><strong>Link: </strong><a href="https://YuMars.github.io/post/%E4%B8%8D%E8%B0%88Mach-O%E9%83%BD%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%AE%9E%E5%AE%9E%E5%9C%A8%E5%9C%A8%E7%9A%84%E5%BF%AB%E9%80%9F%E7%98%A6%E8%BA%AB/">https://YuMars.github.io/post/%E4%B8%8D%E8%B0%88Mach-O%E9%83%BD%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%AE%9E%E5%AE%9E%E5%9C%A8%E5%9C%A8%E7%9A%84%E5%BF%AB%E9%80%9F%E7%98%A6%E8%BA%AB/</a></li>
+        <li style="word-break:break-all"><strong>Link: </strong><a href="https://YuMars.github.io/post/%E8%BD%AC%E7%94%9F%E4%B9%8BKVO_KVO%E5%86%8D%E4%BA%86%E8%A7%A3%E4%B8%80%E6%AC%A1/">https://YuMars.github.io/post/%E8%BD%AC%E7%94%9F%E4%B9%8BKVO_KVO%E5%86%8D%E4%BA%86%E8%A7%A3%E4%B8%80%E6%AC%A1/</a></li>
         <li><strong>License: </strong>This work is under a <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/">知识共享署名-非商业性使用-禁止演绎 4.0 国际许可协议</a>. Kindly fulfill the requirements of the aforementioned License when adapting or creating a derivative of this work.</li>
     </ul>
 </div>
@@ -266,13 +324,15 @@
     <h2>See Also</h2>
     <ul class="listing">
         
-        <li><a href="/post/iOS%E5%BC%80%E5%8F%91Category%E5%88%86%E7%B1%BB%E7%9A%84%E5%BA%95%E5%B1%82%E9%80%BB%E8%BE%91/">iOS开发Category分类的底层逻辑</a></li>
+        <li><a href="/post/@synchroinzed/">@synchroinzed</a></li>
         
-        <li><a href="/post/iOS%E5%BC%80%E5%8F%91Runtime/">iOS开发Runtime</a></li>
+        <li><a href="/post/SDWebImage%E5%BA%95%E5%B1%82%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91/">SDWebImage底层代码逻辑</a></li>
         
-        <li><a href="/post/iOS%E5%BC%80%E5%8F%91weak%E5%BA%95%E5%B1%82%E7%AA%A5%E6%8E%A2/">iOS开发weak底层窥探</a></li>
+        <li><a href="/post/%E5%88%9D%E8%AF%86%E7%BA%A2%E9%BB%91%E6%A0%91/">初识红黑树</a></li>
         
-        <li><a href="/post/macOS&#43;Hugo&#43;Github%E6%90%AD%E5%BB%BAblog/">macOS&#43;Hugo&#43;Github搭建blog</a></li>
+        <li><a href="/post/NSNotification%E5%8F%91%E9%80%81%E6%95%B0%E9%87%8F%E4%B8%8D%E5%9B%BA%E5%AE%9A%E7%9A%84%E5%8E%9F%E5%9B%A0/">NSNotification发送数量不固定的原因</a></li>
+        
+        <li><a href="/post/%E4%BB%80%E4%B9%88%E6%98%AFRunloop/">什么是Runloop</a></li>
         
     </ul>
 </div>
