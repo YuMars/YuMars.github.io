@@ -6,7 +6,16 @@
     <description>Recent content in Posts on YuMars的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
-    <lastBuildDate>Thu, 06 Jul 2023 14:26:40 +0800</lastBuildDate><atom:link href="https://YuMars.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 09 Sep 2023 19:31:49 +0800</lastBuildDate><atom:link href="https://YuMars.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>@Synchroinzed</title>
+      <link>https://YuMars.github.io/post/@synchroinzed/</link>
+      <pubDate>Sat, 09 Sep 2023 19:31:49 +0800</pubDate>
+      
+      <guid>https://YuMars.github.io/post/@synchroinzed/</guid>
+      <description>@synchroinzed 源码 查看码源，通过clang查看编译后的cpp文件或者通过汇编短线。 xcrun &amp;ndash;sdk iphoneos clang -arch arm64 -rewrite-objc -fobjc-arc -fobjcruntime=ios-14.2 ViewController.m 0x10241dd48 &amp;lt;+52&amp;gt;: bl 0x10241e320 ; symbol stub for: objc_msgSendSuper2 0x10241dd4c &amp;lt;+56&amp;gt;: ldur x0, [x29, #-0x8] 0x10241dd50 &amp;lt;+60&amp;gt;: bl 0x10241e344 ; symbol stub for: objc_retain 0x10241dd54 &amp;lt;+64&amp;gt;: str x0, [sp, #0x8] 0x10241dd58 &amp;lt;+68&amp;gt;: bl 0x10241e368 ; symbol stub for: objc_sync_enter 0x10241dd5c &amp;lt;+72&amp;gt;: adrp x0, 3 0x10241dd60 &amp;lt;+76&amp;gt;: add x0, x0, #0x90 ; @&amp;#34;&amp;#34; 0x10241dd64 &amp;lt;+80&amp;gt;: bl 0x10241e2c0 ; symbol stub for: NSLog 0x10241dd68 &amp;lt;+84&amp;gt;: b 0x10241dd6c ; &amp;lt;+88&amp;gt; at ViewController.m 0x10241dd6c &amp;lt;+88&amp;gt;: ldr x0, [sp, #0x8] 0x10241dd70 &amp;lt;+92&amp;gt;: bl 0x10241e374 ; symbol stub for: objc_sync_exit 0x10241dd74 &amp;lt;+96&amp;gt;: ldr x0, [sp, #0x8] 0x10241dd78 &amp;lt;+100&amp;gt;: bl 0x10241e338 ;</description>
+    </item>
+    
     <item>
       <title>SDWebImage底层代码逻辑</title>
       <link>https://YuMars.github.io/post/SDWebImage%E5%BA%95%E5%B1%82%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91/</link>
