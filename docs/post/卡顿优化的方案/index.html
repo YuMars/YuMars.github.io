@@ -9,20 +9,20 @@
     <meta name="referrer" content="no-referrer-when-downgrade">
     
 
-    <title>什么是Runloop | YuMars的博客</title>
-    <meta property="og:title" content="什么是Runloop - YuMars的博客">
+    <title>卡顿优化的方案 | YuMars的博客</title>
+    <meta property="og:title" content="卡顿优化的方案 - YuMars的博客">
     <meta property="og:type" content="article">
         
-    <meta property="article:published_time" content='2023-04-19T00:35:44&#43;08:00'>
+    <meta property="article:published_time" content='2023-10-06T18:28:29&#43;08:00'>
         
         
-    <meta property="article:modified_time" content='2023-04-19T00:35:44&#43;08:00'>
+    <meta property="article:modified_time" content='2023-10-06T18:28:29&#43;08:00'>
         
     <meta name="Keywords" content="Swift,Objective-C,博客,项目管理">
-    <meta name="description" content="什么是Runloop">
+    <meta name="description" content="卡顿优化的方案">
         
     <meta name="author" content="YuMars">
-    <meta property="og:url" content="https://YuMars.github.io/post/%E4%BB%80%E4%B9%88%E6%98%AFRunloop/">
+    <meta property="og:url" content="https://YuMars.github.io/post/%E5%8D%A1%E9%A1%BF%E4%BC%98%E5%8C%96%E7%9A%84%E6%96%B9%E6%A1%88/">
     <link rel="shortcut icon" href='/favicon.ico'  type="image/x-icon">
 
     <link rel="stylesheet" href='/css/normalize.css'>
@@ -144,17 +144,9 @@
     <div class="post-toc-content">
         <nav id="TableOfContents">
   <ul>
-    <li><a href="#什么是runloop">什么是Runloop</a>
-      <ul>
-        <li><a href="#应用范畴">应用范畴</a></li>
-        <li><a href="#runloop的基本作用">Runloop的基本作用</a></li>
-        <li><a href="#runloop类型">Runloop类型</a></li>
-        <li><a href="#runloop运行逻辑">RunLoop运行逻辑</a></li>
-        <li><a href="#runloop的运行流程">Runloop的运行流程</a></li>
-        <li><a href="#cfrunloopmoderef">CFRunloopModeRef:</a></li>
-        <li><a href="#runloop在实际开发中的应用">Runloop在实际开发中的应用</a></li>
-      </ul>
-    </li>
+    <li><a href="#基于runloop">基于Runloop：</a></li>
+    <li><a href="#基于线程">基于线程</a></li>
+    <li><a href="#cadisplaylink监控监控fps">CADisplayLink监控（监控FPS）</a></li>
   </ul>
 </nav>
     </div>
@@ -192,11 +184,11 @@
 </script>
     <article class="post">
         <header>
-            <h1 class="post-title">什么是Runloop</h1>
+            <h1 class="post-title">卡顿优化的方案</h1>
         </header>
         
-  <time datetime="2023-04-18T16:35:44Z" class="post-meta meta-date dt-published">
-    2023-04-19
+  <time datetime="2023-10-06T10:28:29Z" class="post-meta meta-date dt-published">
+    2023-10-06
   </time>
 
 
@@ -210,143 +202,115 @@
         
         
         <div class="post-content">
-            <p>[TOC]</p>
-<h1 id="runloop">Runloop</h1>
-<h2 id="什么是runloop">什么是Runloop</h2>
-<p>在运行过程中循环做一些事情</p>
-<h3 id="应用范畴">应用范畴</h3>
-<ul>
-<li>1.定时器</li>
-<li>2.GCD Async Main Queue</li>
-<li>3.事件响应、手势识别、界面刷新</li>
-<li>4.网络请求</li>
-<li>5.Autoreleasepool</li>
-</ul>
-<p>Runloop的伪代码</p>
-<pre><code>do {
-    // 睡眠中等待消息
-    int message = sleep_and_wait()
-    // 处理消息
-    retVal = process_message();
-} while (0 == retVal);
+            <p>卡顿优化</p>
+<p>#卡顿检测：
+简单来说，主线程需要达到60fps的绘制效率，不能在主线程有单个耗时超过1/60≈16ms的计算任务。通过设置Instrument16ms的采样频率可以检测出</p>
+<h2 id="基于runloop">基于Runloop：</h2>
+<pre><code>主线程绝大部分计算或者绘制任务都是以Runloop为单位发生。单次Runloop如果时长超过16ms(1/60s),就会导致UI体验的卡顿。可以通过Runloop的生命周期来表示卡顿。Runloop每次进入事件开始和结束，来分析卡顿
 </code></pre>
-<h3 id="runloop的基本作用">Runloop的基本作用</h3>
-<ul>
-<li>1.保持程序的基本运行</li>
-<li>2.处理app的各种事件(触摸、定时器)</li>
-<li>3.节省cpu资源，提高程序性能：该做事时做事、该休息时休息</li>
-</ul>
-<h3 id="runloop类型">Runloop类型</h3>
-<ul>
-<li>Foundation:NSRunLoop</li>
-<li>Cor Foundation:CFRunLoopRef</li>
-</ul>
-<p>1.每条线程有唯一的一个与之对应的Runloop对象
-2.Runloop保存在一个全局的Dictionary里，线程作为key，runloop作为value
-3.线程刚创建时并没有Runloop对象，Runloop会在第一次获取它时创建
-4.Runloop会先线程结束时销毁
-5.主线程的Runloop已经自动创建，子线程默认没有开启runloop</p>
-<pre><code>struct __CFRunLoop {
-    CFRuntimeBase _base;
-    pthread_mutex_t _lock; // locked for  accessing mode list */
-    __CFPort _wakeUpPort;  // used for CFRunLoopWakeUp 
-    Boolean _unused;
-    volatile _per_run_data *_perRunData; // reset for runs of the run loop
-    pthread_t _pthread;
-    uint32_t _winthread;
-    CFMutableSetRef _commonModes;
-    CFMutableSetRef _commonModeItems;
-    CFRunLoopModeRef _currentMode; // 当前模式
-    CFMutableSetRef _modes;        // 模式集合
-    struct _block_item *_blocks_head;
-    struct _block_item *_blocks_tail;
-    CFAbsoluteTime _runTime;
-    CFAbsoluteTime _sleepTime;
-    CFTypeRef _counterpart;
-};
-</code></pre>
-<!-- raw HTML omitted -->
-<pre><code>struct __CFRunLoopMode {
-    CFRuntimeBase _base;
-    pthread_mutex_t _lock;// must have the run loop locked before locking this
-    CFStringRef _name;
-    Boolean _stopped;
-    char _padding[3];
-    CFMutableSetRef _sources0;  // CFRunloopSourceRef 
-    CFMutableSetRef _sources1;  // CFRunloopSourceRef
-    CFMutableArrayRef _observers; // CFRunloopObserverRef 
-    CFMutableArrayRef _timers; // CFRunloopTimerRef 定时器
-    CFMutableDictionaryRef _portToV1SourceMap;
-    __CFPortSet _portSet;
-    CFIndex _observerMask;
+<pre tabindex="0"><code>- (void)setupRunloopObserver{
+    static dispatch_once_t onceToken;
+    dispatch_once(&amp;onceToken, ^{
+        CFRunLoopRef runloop = CFRunLoopGetCurrent(); 
+        CFRunLoopObserverRef enterObserver;
+        enterObserver = CFRunLoopObserverCreate(CFAllocatorGetDefault(),
+                                               kCFRunLoopEntry | kCFRunLoopExit,
+                                               true,
+                                               -0x7FFFFFFF,
+                                               BBRunloopObserverCallBack, NULL);
+        CFRunLoopAddObserver(runloop, enterObserver, kCFRunLoopCommonModes);
+        CFRelease(enterObserver);
+    });
 }
-</code></pre>
-<h3 id="runloop运行逻辑">RunLoop运行逻辑</h3>
-<h4 id="source0">Source0:</h4>
-<p>触摸事件处理：performSelector:OnThread</p>
-<h4 id="source1">Source1:</h4>
-<p>基于port的线程间通信
-系统时间捕捉</p>
-<h4 id="timers">Timers:</h4>
-<p>NSTimer
-performSelector:withObject:afterDely:</p>
-<h4 id="observers">Observers:</h4>
-<p>用语监听RunLoop的状态
-UI刷新（BeforeWaiting）
-AutoRelease Pool（BeforeWaiting）</p>
-<h3 id="runloop的运行流程">Runloop的运行流程</h3>
-<ul>
-<li>1.通知Observer：进入Runloop</li>
-<li>2.通知Observer：即将处理timer</li>
-<li>3.通知Observer：即将处理sources</li>
-<li>4.处理blocks(CFRunLoopPerformBlock)</li>
-<li>5.处理Source0(可能会再次处理Blocks)</li>
-<li>6.如果存在source1，就跳转到第8步</li>
-<li>7.通知Observer是：开始休眠  （切换到内核态层面sleep）</li>
-<li>8.通知observers:结束休眠（被某个消息唤醒）
-处理Timer
-处理GCD Async to Main Queue
-处理Source1</li>
-<li>9.处理Blocks</li>
-<li>10.根据前面的执行结果，决定如何做
-回到第2步
-退出Loop</li>
-<li>11.通知Observers:退出Runloop</li>
-</ul>
-<h3 id="cfrunloopmoderef">CFRunloopModeRef:</h3>
-<ul>
-<li>1.CFRunloopModeRef代表Runloop的运行模式</li>
-<li>2.一个Runloop包含若干个Mode，每个Mode又包含若干个Souce0、Souce1、Timer、Observer</li>
-<li>3.Runloop启动时只能选择一个Mode，作为currentMode</li>
-<li>4.如果需要切换Mode、只能退出当前Loop、再重新进入一个Mode</li>
-<li>5.不同组的source0、source1、timer、obserber能分隔开</li>
-</ul>
-<p>如果Mode里没有任何source0、source1、timer、obserber，Runloop会立马退出</p>
-<h4 id="常见的2中mode">常见的2中Mode：</h4>
-<p>DefaultMode
-TrackingRunloop</p>
-<h4 id="运行逻辑">运行逻辑：</h4>
-<ul>
-<li>1.source0： 触摸事件处理</li>
-<li>2.source1：
-基于Port的线程间通信
-系统时间捕捉(发送给source0处理)</li>
-<li>3.timer</li>
-<li>4.observer
-监听Runloop状态
-autoreleasepool</li>
-</ul>
-<h3 id="runloop在实际开发中的应用">Runloop在实际开发中的应用</h3>
-<ul>
-<li>1.控制线程生命周期（线程保活）</li>
-<li>2.解决NSTimer在滑动时停止工作 (NSRunLoopCommonModes)</li>
-<li>3.监控卡顿</li>
-<li>4.性能优化</li>
-</ul>
-<p>// [[NSRunLoop currentRunLoop] run]无法被停止，适用于用不销毁的线程</p>
-<p>// 控制Runloop
-while (shoulStop &amp;&amp; [[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]]) {</p>
-<p>}</p>
+static void BBRunloopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info) {
+    switch (activity) {
+        case kCFRunLoopEntry: {
+            NSLog(@&#34;enter runloop...&#34;);
+        }
+            break;
+        case kCFRunLoopExit: {
+            NSLog(@&#34;leave runloop...&#34;);
+        }
+            break;
+        default: break;
+    }
+}
+</code></pre><p>kCFRunLoopExit的时间，减去kCFRunLoopEntry的时间，即为一次Runloop所耗费的时间，这样能找出大于16ms的Runloop。</p>
+<h2 id="基于线程">基于线程</h2>
+<p>最理想的方案是让UI线程主动汇报当前耗时任务，每隔16ms让UI线程报到一次，如果16ms之后UI线程没有报到，那么一定在执行一个耗时任务（这里感觉如果说是前15ms都没做事，最后要报到的那1ms开始执行繁重任务，也会做到无法报到。所以这个方案这里可以优化）。
+1.启动一个worker线程，每隔一段时间ping一下主线程（发送通知）
+2.主线程如果有空，会接收到通知，并pong（发送另外一个通知）worker线程
+3.如果worker线程没收到时间间隔内的pong回复，则主线程在执行其他任务，反之则主线程空闲
+4.主线程繁忙的时候，暂停线程，打印主线程当前的函数调用栈。
+iOS的多线程一般使用NSOperation或者GCD，这两者都无法暂停每个正在执行的线程。如果从woker线程发送signal，UI线程会被立即停止，并进入singal的回调，再讲callstack打印，这样就可以定位卡顿的时候函数调用</p>
+<pre tabindex="0"><code>signal(CALLSTACK_SIG, thread_singal_handler);
+</code></pre><pre tabindex="0"><code>//在主线程注册signal handler
+signal(CALLSTACK_SIG, thread_singal_handler);
+
+//通过NSNotification完成ping pong流程
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(detectPingFromWorkerThread) name:Notification_PMainThreadWatcher_Worker_Ping object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(detectPongFromMainThread) name:Notification_PMainThreadWatcher_Main_Pong object:nil];
+
+//如果ping超时，pthread_kill主线程。
+pthread_kill(mainThreadID, CALLSTACK_SIG);
+
+//主线程被暂停，进入signal回调，通过[NSThread callStackSymbols]获取主线程当前callstack。
+static void thread_singal_handler(int sig) {
+    NSLog(@&#34;main thread catch signal: %d&#34;, sig);
+    if (sig != CALLSTACK_SIG) {
+        return;
+    }
+    NSArray* callStack = [NSThread callStackSymbols];
+    
+    NSLog(@&#34;detect slow call stack on main thread! \n&#34;);
+    for (NSString* call in callStack) {
+        NSLog(@&#34;%@\n&#34;, call);
+    }
+    return;
+}
+</code></pre><p>上述方法不能调试，调试时gdb会干扰singal的处理，导致singal handler无法进，在UI线程遇到卡顿是能正常回调。</p>
+<h2 id="cadisplaylink监控监控fps">CADisplayLink监控（监控FPS）</h2>
+<p>CADisplayLink监控的思路是每个屏幕刷新周期，派发标记位设置任务到主线程中，如果多次超出16.7ms的刷新阙值，即可看作是发生了卡顿。</p>
+<blockquote>
+<p>什么是CADisplayLink？
+CADisplayLink是一个能让我们以和屏幕刷新率相同的频率将内容画到屏幕上的定时器。
+我们在应用中创建一个新的 CADisplayLink 对象，把它添加到一个runloop中，并给它提供一个 target 和selector 在屏幕刷新的时候调用。
+一旦 CADisplayLink 以特定的模式注册到runloop之后，每当屏幕需要刷新的时候，runloop就会调用CADisplayLink绑定的target上的selector，这时target可以读到 CADisplayLink 的每次调用的时间戳，用来准备下一帧显示需要的数据。
+例如一个视频应用使用时间戳来计算下一帧要显示的视频数据。在UI做动画的过程中，需要通过时间戳来计算UI对象在动画的下一帧要更新的大小等等。
+在添加进runloop的时候我们应该选用高一些的优先级，来保证动画的平滑。可以设想一下，我们在动画的过程中，runloop被添加进来了一个高优先级的任务，那么，下一次的调用就会被暂停转而先去执行高优先级的任务，然后在接着执行CADisplayLink的调用，从而造成动画过程的卡顿，使动画不流畅。
+duration属性提供了每帧之间的时间，也就是屏幕每次刷新之间的的时间。我们可以使用这个时间来计算出下一帧要显示的UI的数值。但是 duration只是个大概的时间，如果CPU忙于其它计算，就没法保证以相同的频率执行屏幕的绘制操作，这样会跳过几次调用回调方法的机会。
+frameInterval属性是可读可写的NSInteger型值，标识间隔多少帧调用一次selector 方法，默认值是1，即每帧都调用一次。如果每帧都调用一次的话，对于iOS设备来说那刷新频率就是60HZ也就是每秒60次，如果将 frameInterval 设为2 那么就会两帧调用一次，也就是变成了每秒刷新30次。
+我们通过pause属性开控制CADisplayLink的运行。当我们想结束一个CADisplayLink的时候，应该调用-(void)invalidate
+从runloop中删除并删除之前绑定的 target跟selector
+另外CADisplayLink 不能被继承。</p>
+</blockquote>
+<pre tabindex="0"><code>#define LXD_RESPONSE_THRESHOLD 10
+dispatch_async(lxd_fluecy_monitor_queue(), ^{
+    CADisplayLink * displayLink = [CADisplayLink displayLinkWithTarget: self selector: @selector(screenRenderCall)];
+    [self.displayLink invalidate];
+    self.displayLink = displayLink;
+
+    [self.displayLink addToRunLoop: [NSRunLoop currentRunLoop] forMode: NSDefaultRunLoopMode];
+    CFRunLoopRunInMode(kCFRunLoopDefaultMode, CGFLOAT_MAX, NO);
+});
+
+- (void)screenRenderCall {
+    __block BOOL flag = YES;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        flag = NO;
+        dispatch_semaphore_signal(self.semphore);
+    });
+    dispatch_wait(self.semphore, 16.7 * NSEC_PER_MSEC);
+    if (flag) {
+        if (++self.timeOut &lt; 1) { return; }
+        // TODO:FPS丢失
+    }
+    self.timeOut = 0;
+}
+</code></pre><p>方案        优点                    缺点                                实现复杂性
+FPS        直观                无法准确定位卡顿堆栈                        简单
+RunLoop Observer        能定位卡顿堆栈                    不能记录卡顿时间，定义卡顿的阈值不好控制    复杂
+Ping Main Thread        能定位卡顿堆栈，能记录卡顿时间        一直ping主线程，费电    中等</p>
 
         </div>
 
@@ -354,7 +318,7 @@ while (shoulStop &amp;&amp; [[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoo
 <div class="post-archive">
     <ul class="post-copyright">
         <li><strong>Author: </strong><a rel="author" href="https://YuMars.github.io">YuMars</a></li>
-        <li style="word-break:break-all"><strong>Link: </strong><a href="https://YuMars.github.io/post/%E4%BB%80%E4%B9%88%E6%98%AFRunloop/">https://YuMars.github.io/post/%E4%BB%80%E4%B9%88%E6%98%AFRunloop/</a></li>
+        <li style="word-break:break-all"><strong>Link: </strong><a href="https://YuMars.github.io/post/%E5%8D%A1%E9%A1%BF%E4%BC%98%E5%8C%96%E7%9A%84%E6%96%B9%E6%A1%88/">https://YuMars.github.io/post/%E5%8D%A1%E9%A1%BF%E4%BC%98%E5%8C%96%E7%9A%84%E6%96%B9%E6%A1%88/</a></li>
         <li><strong>License: </strong>This work is under a <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/">知识共享署名-非商业性使用-禁止演绎 4.0 国际许可协议</a>. Kindly fulfill the requirements of the aforementioned License when adapting or creating a derivative of this work.</li>
     </ul>
 </div>
@@ -368,15 +332,15 @@ while (shoulStop &amp;&amp; [[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoo
     <h2>See Also</h2>
     <ul class="listing">
         
-        <li><a href="/post/Block%E7%9A%84%E6%9C%AC%E8%B4%A8/">Block的本质</a></li>
+        <li><a href="/post/%E8%BD%AC%E7%94%9F%E4%B9%8BKVO_KVO%E5%86%8D%E4%BA%86%E8%A7%A3%E4%B8%80%E6%AC%A1/">转生之KVO&amp;KVO再了解一次</a></li>
         
-        <li><a href="/post/%E4%B8%8D%E8%B0%88Mach-O%E9%83%BD%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%AE%9E%E5%AE%9E%E5%9C%A8%E5%9C%A8%E7%9A%84%E5%BF%AB%E9%80%9F%E7%98%A6%E8%BA%AB/">不谈Mach-O，项目中实实在在的快速瘦身</a></li>
+        <li><a href="/post/@synchroinzed/">@synchroinzed</a></li>
         
-        <li><a href="/post/iOS%E5%BC%80%E5%8F%91Category%E5%88%86%E7%B1%BB%E7%9A%84%E5%BA%95%E5%B1%82%E9%80%BB%E8%BE%91/">iOS开发Category分类的底层逻辑</a></li>
+        <li><a href="/post/SDWebImage%E5%BA%95%E5%B1%82%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91/">SDWebImage底层代码逻辑</a></li>
         
-        <li><a href="/post/iOS%E5%BC%80%E5%8F%91Runtime/">iOS开发Runtime</a></li>
+        <li><a href="/post/%E5%88%9D%E8%AF%86%E7%BA%A2%E9%BB%91%E6%A0%91/">初识红黑树</a></li>
         
-        <li><a href="/post/iOS%E5%BC%80%E5%8F%91weak%E5%BA%95%E5%B1%82%E7%AA%A5%E6%8E%A2/">iOS开发weak底层窥探</a></li>
+        <li><a href="/post/NSNotification%E5%8F%91%E9%80%81%E6%95%B0%E9%87%8F%E4%B8%8D%E5%9B%BA%E5%AE%9A%E7%9A%84%E5%8E%9F%E5%9B%A0/">NSNotification发送数量不固定的原因</a></li>
         
     </ul>
 </div>

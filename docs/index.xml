@@ -6,7 +6,16 @@
     <description>Recent content on YuMars的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
-    <lastBuildDate>Fri, 29 Sep 2023 23:58:27 +0800</lastBuildDate><atom:link href="https://YuMars.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 06 Oct 2023 18:28:29 +0800</lastBuildDate><atom:link href="https://YuMars.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>卡顿优化的方案</title>
+      <link>https://YuMars.github.io/post/%E5%8D%A1%E9%A1%BF%E4%BC%98%E5%8C%96%E7%9A%84%E6%96%B9%E6%A1%88/</link>
+      <pubDate>Fri, 06 Oct 2023 18:28:29 +0800</pubDate>
+      
+      <guid>https://YuMars.github.io/post/%E5%8D%A1%E9%A1%BF%E4%BC%98%E5%8C%96%E7%9A%84%E6%96%B9%E6%A1%88/</guid>
+      <description>卡顿优化 #卡顿检测： 简单来说，主线程需要达到60fps的绘制效率，不能在主线程有单个耗时超过1/60≈16ms的计算任务。通过设置Instrument16ms的采样频率可以检测出 基于Runloop： 主线程绝大部分计算或者绘制任务都是以Runloop为单位发生。单次Runloop如</description>
+    </item>
+    
     <item>
       <title>转生之KVO&amp;KVO再了解一次</title>
       <link>https://YuMars.github.io/post/%E8%BD%AC%E7%94%9F%E4%B9%8BKVO_KVO%E5%86%8D%E4%BA%86%E8%A7%A3%E4%B8%80%E6%AC%A1/</link>
