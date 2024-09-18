@@ -1,0 +1,2819 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    
+
+    <title>KSCrash源码解析 | YuMars的博客</title>
+    <meta property="og:title" content="KSCrash源码解析 - YuMars的博客">
+    <meta property="og:type" content="article">
+        
+    <meta property="article:published_time" content='2024-01-18T14:18:57&#43;08:00'>
+        
+        
+    <meta property="article:modified_time" content='2024-01-18T14:18:57&#43;08:00'>
+        
+    <meta name="Keywords" content="Swift,Objective-C,博客,项目管理">
+    <meta name="description" content="KSCrash源码解析">
+        
+    <meta name="author" content="YuMars">
+    <meta property="og:url" content="https://YuMars.github.io/post/KSCrash%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">
+    <link rel="shortcut icon" href='/favicon.ico'  type="image/x-icon">
+
+    <link rel="stylesheet" href='/css/normalize.css'>
+    <link rel="stylesheet" href='/css/style.css'>
+    <script type="text/javascript" src="//cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    
+    
+    
+    
+    
+    
+        <link rel="stylesheet" href='/css/douban.css'>
+    
+        <link rel="stylesheet" href='/css/other.css'>
+    
+</head>
+
+<body>
+    <header id="header" class="clearfix">
+    <div class="container">
+        <div class="col-group">
+            <div class="site-name ">
+                
+                    <a id="logo" href="https://YuMars.github.io">
+                        YuMars的博客
+                    </a>
+                
+                <p class="description">还有更好的吗，还能更深入吗，还会举一反三吗</p>
+            </div>
+            <div>
+                <nav id="nav-menu" class="clearfix">
+                    <a class="current" href="https://YuMars.github.io">Home</a>
+                    
+                    <a  href="https://YuMars.github.io/essay/" title="随笔">随笔</a>
+                    
+                    <a  href="https://YuMars.github.io/tools/" title="工具">工具</a>
+                    
+                    <a  href="https://YuMars.github.io/archives/" title="归档">归档</a>
+                    
+                    <a  href="https://YuMars.github.io/about/" title="关于">关于</a>
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+    <div id="body">
+        <div class="container">
+            <div class="col-group">
+
+                <div class="col-8" id="main">
+                    
+<div class="res-cons">
+    <style type="text/css">
+    .post-toc {
+        position: fixed;
+        width: 200px;
+        margin-left: -210px;
+        padding: 5px 10px;
+        font-family: Athelas, STHeiti, Microsoft Yahei, serif;
+        font-size: 12px;
+        border: 1px solid rgba(0, 0, 0, .07);
+        border-radius: 5px;
+        background-color: rgba(255, 255, 255, 0.98);
+        background-clip: padding-box;
+        -webkit-box-shadow: 1px 1px 2px rgba(0, 0, 0, .125);
+        box-shadow: 1px 1px 2px rgba(0, 0, 0, .125);
+        word-wrap: break-word;
+        white-space: nowrap;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        z-index: 999;
+        cursor: pointer;
+        max-height: 70%;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .post-toc .post-toc-title {
+        width: 100%;
+        margin: 0 auto;
+        font-size: 20px;
+        font-weight: 400;
+        text-transform: uppercase;
+        text-align: center;
+    }
+
+    .post-toc .post-toc-content {
+        font-size: 15px;
+    }
+
+    .post-toc .post-toc-content>nav>ul {
+        margin: 10px 0;
+    }
+
+    .post-toc .post-toc-content ul {
+        padding-left: 20px;
+        list-style: square;
+        margin: 0.5em;
+        line-height: 1.8em;
+    }
+
+    .post-toc .post-toc-content ul ul {
+        padding-left: 15px;
+        display: none;
+    }
+
+    @media print,
+    screen and (max-width:1057px) {
+        .post-toc {
+            display: none;
+        }
+    }
+</style>
+<div class="post-toc" style="position: absolute; top: 188px;">
+    <h2 class="post-toc-title">Table of Contents</h2>
+    <div class="post-toc-content">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#crash时收集信息">crash时收集信息</a></li>
+    <li><a href="#app二进制文件解析的信息">app二进制文件解析的信息</a></li>
+  </ul>
+
+  <ul>
+    <li><a href="#mach层异常">Mach层异常</a>
+      <ul>
+        <li><a href="#开启mach层异常捕获">开启Mach层异常捕获</a></li>
+        <li><a href="#监测到mach层异常并收集">监测到Mach层异常并收集</a></li>
+        <li><a href="#取消mach层检测">取消Mach层检测</a></li>
+      </ul>
+    </li>
+    <li><a href="#signal异常">signal异常</a>
+      <ul>
+        <li><a href="#开启signal监测">开启signal监测</a></li>
+        <li><a href="#监测到signal异常并收集">监测到signal异常并收集</a></li>
+        <li><a href="#取消signal监测">取消signal监测</a></li>
+      </ul>
+    </li>
+    <li><a href="#c异常">C++异常</a>
+      <ul>
+        <li><a href="#开启c异常监测">开启C++异常监测</a></li>
+        <li><a href="#监测到c异常并收集">监测到C++异常并收集</a></li>
+        <li><a href="#取消c异常监测">取消C++异常监测</a></li>
+      </ul>
+    </li>
+    <li><a href="#nsexception异常">NSException异常</a>
+      <ul>
+        <li><a href="#开启nsexception异常监测">开启NSException异常监测</a></li>
+        <li><a href="#监测到nsexception异常并收集">监测到NSException异常并收集</a></li>
+        <li><a href="#取消nsexception异常监测">取消NSException异常监测</a></li>
+      </ul>
+    </li>
+    <li><a href="#deallock">DealLock</a>
+      <ul>
+        <li><a href="#开启deadlock监测">开启DeadLock监测</a></li>
+        <li><a href="#处理deadlock">处理DeadLock</a></li>
+      </ul>
+    </li>
+    <li><a href="#异常收集总结">异常收集总结</a></li>
+  </ul>
+
+  <ul>
+    <li><a href="#写入数据方法">写入数据方法</a>
+      <ul>
+        <li><a href="#写入二进制文件binaryimage信息">写入二进制文件binaryImage信息</a></li>
+      </ul>
+    </li>
+    <li><a href="#写入crash时线程信息">写入crash时线程信息</a>
+      <ul>
+        <li><a href="#符号化调用堆栈">符号化调用堆栈</a></li>
+        <li><a href="#写入寄存器信息">写入寄存器信息</a></li>
+        <li><a href="#记录调用堆栈的部分信息">记录调用堆栈的部分信息</a></li>
+        <li><a href="#取出地址上的内存对象">取出地址上的内存对象</a></li>
+      </ul>
+    </li>
+    <li><a href="#野指针的监控">野指针的监控</a></li>
+  </ul>
+</nav>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var postToc = $(".post-toc");
+        if (postToc.length) {
+            var leftPos = $("#main").offset().left;
+            if (leftPos < 220) {
+                postToc.css({ "width": leftPos - 10, "margin-left": (0 - leftPos) })
+            }
+
+            var t = postToc.offset().top - 20,
+                a = {
+                    start: {
+                        position: "absolute",
+                        top: t
+                    },
+                    process: {
+                        position: "fixed",
+                        top: 20
+                    },
+                };
+            $(window).scroll(function () {
+                var e = $(window).scrollTop();
+                e < t ? postToc.css(a.start) : postToc.css(a.process)
+            })
+        }
+
+        if ($("#TableOfContents").children().length < 1) {
+            $(".post-toc").remove();
+        }
+    })
+</script>
+    <article class="post">
+        <header>
+            <h1 class="post-title">KSCrash源码解析</h1>
+        </header>
+        
+  <time datetime="2024-01-18T06:18:57Z" class="post-meta meta-date dt-published">
+    2024-01-18
+  </time>
+
+
+
+        
+        <div class="post-meta">
+            <span id="busuanzi_container_page_pv">&nbsp;|
+                <span id="busuanzi_value_page_pv"></span> <span>reads</span>
+            </span>
+        </div>
+        
+        
+        <div class="post-content">
+            <p>[TOC]</p>
+<h1 id="kscrash">KSCrash</h1>
+<p>KSCrash 是 iOS 上一个知名的crash收集框架。大部分第三方crash库，都是基于KSCrash修改的。</p>
+<h1 id="kscrash的基本功能">KSCrash的基本功能</h1>
+<p>KSCrash的功能是选择好需要收集的信息和上报方式后，当项目中崩溃发生的时候，KSCrash会收集所有崩溃产生时的crash信息记录在crashContext上下文中，然后将crashContext信息解析并且通过对crashContext上下文的解析降崩溃发生的崩溃信息解析并记录到磁盘文件中，在下次打开App上报内容。</p>
+<h2 id="crash时收集信息">crash时收集信息</h2>
+<p>Mach层异常
+BSD层POSIX signal异常
+App层NSException异常
+C++异常
+主线程死锁、
+主动上报的异常</p>
+<h2 id="app二进制文件解析的信息">app二进制文件解析的信息</h2>
+<p>mach-O 二进制镜像
+mach-O header
+mach-O segment
+crash时所有线程信息
+crash对应thread线程信息
+symbolicate符号化信息
+register寄存器信息
+调用的stack堆栈信息
+寄存器或者堆栈对应的对象信息（野指针信息）</p>
+<h1 id="总体结构">总体结构</h1>
+<blockquote>
+<p>├── Installations（启动器）
+├── Recording （记录crash）
+│   ├── Monitors
+│   └── Tools
+├── Reporting （上报crash）
+│   ├── Filters
+│   │   └── Tools
+│   ├── Sinks
+│   └── Tools
+├── llvm
+│   ├── ADT
+│   ├── Config
+│   └── Support
+└── swift
+└── Basic</p>
+</blockquote>
+<p>可以看到总共分为三大部分：</p>
+<ul>
+<li>Crash Recording</li>
+<li>Crash Reporting</li>
+<li>Installation</li>
+</ul>
+<p>其中 Installation 用来启动 KSCrash，并且指定了 Crash 收集的方式。Crash收集方式可以包括：邮件发送，向指定服务器发送，向专门的 Crash 收集服务器发送等方式。每种方式对应于一个实现类：</p>
+<blockquote>
+<p>├── KSCrashInstallation+Alert.h
+├── KSCrashInstallation+Alert.m
+├── KSCrashInstallation+Private.h
+├── KSCrashInstallation.h
+├── KSCrashInstallation.m
+├── KSCrashInstallationConsole.h
+├── KSCrashInstallationConsole.m
+├── KSCrashInstallationEmail.h
+├── KSCrashInstallationEmail.m
+├── KSCrashInstallationQuincyHockey.h
+├── KSCrashInstallationQuincyHockey.m
+├── KSCrashInstallationStandard.h
+├── KSCrashInstallationStandard.m
+├── KSCrashInstallationVictory.h
+└── KSCrashInstallationVictory.m</p>
+</blockquote>
+<p>Crash Reporting 包含了三个子文件夹，分别是 Filter，Sink 和 Tools，主要用来上报 Crash。</p>
+<blockquote>
+<p>├── Filters
+│   ├── KSCrashReportFilter.h
+│   ├── KSCrashReportFilterAlert.h
+│   ├── KSCrashReportFilterAlert.m
+│   ├── KSCrashReportFilterAppleFmt.h
+│   ├── KSCrashReportFilterAppleFmt.m
+│   ├── KSCrashReportFilterBasic.h
+│   ├── KSCrashReportFilterBasic.m
+│   ├── KSCrashReportFilterGZip.h
+│   ├── KSCrashReportFilterGZip.m
+│   ├── KSCrashReportFilterJSON.h
+│   ├── KSCrashReportFilterJSON.m
+│   ├── KSCrashReportFilterSets.h
+│   ├── KSCrashReportFilterSets.m
+│   ├── KSCrashReportFilterStringify.h
+│   ├── KSCrashReportFilterStringify.m
+│   └── Tools
+├── Sinks
+│   ├── KSCrashReportSinkConsole.h
+│   ├── KSCrashReportSinkConsole.m
+│   ├── KSCrashReportSinkEMail.h
+│   ├── KSCrashReportSinkEMail.m
+│   ├── KSCrashReportSinkQuincyHockey.h
+│   ├── KSCrashReportSinkQuincyHockey.m
+│   ├── KSCrashReportSinkStandard.h
+│   ├── KSCrashReportSinkStandard.m
+│   ├── KSCrashReportSinkVictory.h
+│   └── KSCrashReportSinkVictory.m
+└── Tools</p>
+</blockquote>
+<p>其中 Filter 包含了将存储在设备上的 Crash 信息的 NSData 转为 NSString，JSON，GZip 等几种方式的实现类。
+Sink 则是不同发送方式的真正的处理者，和 Installation 中的几种收集方式一一对应。
+Tools 是一些工具类，以及发送请求相关的类的合集。
+最关键的是 Crash Recording，它包含了捕捉各种类型 crash 的方式。</p>
+<h1 id="基本使用">基本使用</h1>
+<p>以官方 Demo 为例</p>
+<pre tabindex="0"><code>@implementation AppDelegate
+
+- (BOOL) application:(__unused UIApplication *) application
+didFinishLaunchingWithOptions:(__unused NSDictionary *) launchOptions {
+    [self installCrashHandler];    
+    return YES;
+}
+
+- (void) installCrashHandler {
+    /// 👇是各种 crash 收集方式，选择一种使用
+//    KSCrashInstallation* installation = [self makeStandardInstallation];
+    KSCrashInstallation* installation = [self makeEmailInstallation];
+//    KSCrashInstallation* installation = [self makeHockeyInstallation];
+//    KSCrashInstallation* installation = [self makeQuincyInstallation];
+//    KSCrashInstallation *installation = [self makeVictoryInstallation];
+
+    /// 注册 crash handler
+    [installation install];
+
+    /// 发送所有的 crash 日志
+    [installation sendAllReportsWithCompletion:^(NSArray* reports, BOOL completed, NSError* error) {
+         if(completed) {
+             NSLog(@&#34;Sent %d reports&#34;, (int)[reports count]);
+         } else {
+             NSLog(@&#34;Failed to send reports: %@&#34;, error);
+         }
+     }];
+}
+
+- (KSCrashInstallation*) makeEmailInstallation {
+    NSString* emailAddress = @&#34;your@email.here&#34;;
+    
+    KSCrashInstallationEmail* email = [KSCrashInstallationEmail sharedInstance];
+    email.recipients = @[emailAddress];
+    email.subject = @&#34;Crash Report&#34;
+    email.message = @&#34;This is a crash report&#34;;
+    email.filenameFmt = @&#34;crash-report-%d.txt.gz&#34;;
+    
+    [email addConditionalAlertWithTitle:@&#34;Crash Detected&#34;
+                                message:@&#34;The app crashed last time it was launched. Send a crash report?&#34;
+                              yesAnswer:@&#34;Sure!&#34;
+                               noAnswer:@&#34;No thanks&#34;];
+    
+    // Uncomment to send Apple style reports instead of JSON.
+    [email setReportStyle:KSCrashEmailReportStyleApple useDefaultFilenameFormat:YES];
+
+    return email;
+}
+
+@end
+</code></pre><p>如上面代码所示，在 AppDelegate 中注册 KSCrash。在注册 handler 期间，通过工厂模式选择一个上传方式的 installation 进行实例化。不同的 installation 会有不同的处理，比如上面的 email 上传方式，那就需要提供邮箱地址。</p>
+<p>不同的 installation有不同的上传日志的方式，但是它们注册监听的方式都是一样的。它们都继承于基类KSCrashInstallation，在基类中有统一的 install 方法。</p>
+<h1 id="crash监测">Crash监测</h1>
+<p>在 install 的过程中，installation创建了一个单例对象KSCrash，并且调用它的 install</p>
+<pre tabindex="0"><code>// KSCrash.m
+/// 开启监控
+- (BOOL) install {
+    _monitoring = kscrash_install(self.bundleName.UTF8String,
+                                          self.basePath.UTF8String);
+    if(self.monitoring == 0) {
+        return false;
+    }
+    return true;
+}
+</code></pre><p>它调用了c方法kscrash_install，这个方法在 KSCrashC.c 中：</p>
+<pre tabindex="0"><code>/// 真正开始的方法, 创建一个 monitor
+KSCrashMonitorType kscrash_install(const char* appName, const char* const installPath) {
+    KSLOG_DEBUG(&#34;Installing crash reporter.&#34;);
+
+    if(g_installed) { // 已经初始化过，直接返回监视器类型
+        KSLOG_DEBUG(&#34;Crash reporter already installed.&#34;);
+        return g_monitoring;
+    }
+    g_installed = 1;
+
+    // 设置路径
+    {
+        char path[KSFU_MAX_PATH_LENGTH];
+        snprintf(path, sizeof(path), &#34;%s/Reports&#34;, installPath);
+        ksfu_makePath(path);
+        kscrs_initialize(appName, path);
+        
+        snprintf(path, sizeof(path), &#34;%s/Data&#34;, installPath);
+        ksfu_makePath(path);
+        snprintf(path, sizeof(path), &#34;%s/Data/CrashState.json&#34;, installPath);
+        kscrashstate_initialize(path);
+        
+        snprintf(g_consoleLogPath, sizeof(g_consoleLogPath), &#34;%s/Data/ConsoleLog.txt&#34;, installPath);
+        if(g_shouldPrintPreviousLog)
+        {
+            printPreviousLog(g_consoleLogPath);
+        }
+        kslog_setLogFilename(g_consoleLogPath, true);
+        
+    }
+    
+    // 初始化线程
+    ksccd_init(60);
+
+    // monitor设置回调
+    kscm_setEventCallback(onCrash);
+    // monitor类型
+    KSCrashMonitorType monitors = kscrash_setMonitoring(g_monitoring);
+
+    KSLOG_DEBUG(&#34;Installation complete.&#34;);
+
+    // 初始化完成前通知
+    notifyOfBeforeInstallationState();
+
+    return monitors;
+}
+</code></pre><p>oncrash是设置的回调部分。monitor主要设置检测的部分</p>
+<pre tabindex="0"><code>/// 设置监测
+KSCrashMonitorType kscrash_setMonitoring(KSCrashMonitorType monitors)
+{
+    g_monitoring = monitors;
+    
+    if(g_installed)
+    {
+        // 激活Monitor并且返回监视器类型
+        kscm_setActiveMonitors(monitors);
+        return kscm_getActiveMonitors();
+    }
+    // Return what we will be monitoring in future.
+    return g_monitoring;
+}
+</code></pre><p>由于前面设置了 g_installed ，因此，这里就会通过 kscm_setActiveMonitors() 这个方法激活 monitor。这是整个激活步骤的核心方法：</p>
+<pre tabindex="0"><code>/// 设置监测状态激活
+void kscm_setActiveMonitors(KSCrashMonitorType monitorTypes)
+{
+    // 调试中的应用只记录 Mach Signal C++ OC 的 crash
+    if(ksdebug_isBeingTraced() &amp;&amp; (monitorTypes &amp; KSCrashMonitorTypeDebuggerUnsafe))
+    {
+        static bool hasWarned = false;
+        if(!hasWarned)
+        {
+            hasWarned = true;
+            KSLOGBASIC_WARN(&#34;    ************************ Crash Handler Notice ************************&#34;);
+            KSLOGBASIC_WARN(&#34;    *     App is running in a debugger. Masking out unsafe monitors.     *&#34;);
+            KSLOGBASIC_WARN(&#34;    * This means that most crashes WILL NOT BE RECORDED while debugging! *&#34;);
+            KSLOGBASIC_WARN(&#34;    **********************************************************************&#34;);
+        }
+        monitorTypes &amp;= KSCrashMonitorTypeDebuggerSafe;
+    }
+    
+    /// 是否需要线程安全，只有 Mach 和 Signal 异常是线程安全的
+    if(g_requiresAsyncSafety &amp;&amp; (monitorTypes &amp; KSCrashMonitorTypeAsyncUnsafe))
+    {
+        KSLOG_DEBUG(&#34;Async-safe environment detected. Masking out unsafe monitors.&#34;);
+        monitorTypes &amp;= KSCrashMonitorTypeAsyncSafe;
+    }
+
+    KSLOG_DEBUG(&#34;Changing active monitors from 0x%x tp 0x%x.&#34;, g_activeMonitors, monitorTypes);
+
+    KSCrashMonitorType activeMonitors = KSCrashMonitorTypeNone;
+    for(int i = 0; i &lt; g_monitorsCount; i++)
+    {
+        Monitor* monitor = &amp;g_monitors[i];
+        bool isEnabled = monitor-&gt;monitorType &amp; monitorTypes;
+        // 开启Monitor
+        setMonitorEnabled(monitor, isEnabled);
+        if(isMonitorEnabled(monitor)) // 已经启动的，按位或
+        {
+            activeMonitors |= monitor-&gt;monitorType;
+        } /// 还未启动的，按位与再取返 启动
+        else
+        {
+            activeMonitors &amp;= ~monitor-&gt;monitorType;
+        }
+    }
+
+    KSLOG_DEBUG(&#34;Active monitors are now 0x%x.&#34;, activeMonitors);
+    g_activeMonitors = activeMonitors;
+}
+</code></pre><p>外部传入的 g_monitoring 默认值为 KSCrashMonitorTypeProductionSafeMinimal，它的定义如下：</p>
+<pre tabindex="0"><code>#define KSCrashMonitorTypeProductionSafe (KSCrashMonitorTypeAll &amp; (~KSCrashMonitorTypeExperimental))
+#define KSCrashMonitorTypeProductionSafeMinimal (KSCrashMonitorTypeProductionSafe &amp; (~KSCrashMonitorTypeOptional))
+</code></pre><p>主要的检测类型KSCrashMonitorType：</p>
+<pre tabindex="0"><code>typedef enum
+{
+    /* 捕获并报告 Mach 异常。*/
+    KSCrashMonitorTypeMachException      = 0x01,
+    
+    /* 捕获并报告 POSIX 信号。*/
+    KSCrashMonitorTypeSignal             = 0x02,
+    
+    /* 捕获并报告 C++ 异常。
+     * 注意：这会稍微减慢异常处理速度。
+     */
+    KSCrashMonitorTypeCPPException       = 0x04,
+    
+    /* 捕获并报告 NSException 异常。*/
+    KSCrashMonitorTypeNSException        = 0x08,
+    
+    /* 检测并报告主线程的死锁。*/
+    KSCrashMonitorTypeMainThreadDeadlock = 0x10,
+    
+    /* 接受并报告用户生成的异常。*/
+    KSCrashMonitorTypeUserReported       = 0x20,
+    
+    /* 跟踪并注入系统信息。*/
+    KSCrashMonitorTypeSystem             = 0x40,
+    
+    /* 跟踪并注入应用程序状态。*/
+    KSCrashMonitorTypeApplicationState   = 0x80,
+    
+    /* 跟踪僵尸对象，并注入最后一个僵尸 NSException 异常。*/
+    KSCrashMonitorTypeZombie             = 0x100,
+} KSCrashMonitorType;
+</code></pre><p>可以看到，all 代表的就是所有异常方式：</p>
+<ol>
+<li>Mach 异常</li>
+<li>Signal 异常</li>
+<li>C++ 异常</li>
+<li>OC 异常</li>
+<li>死锁</li>
+<li>用户抛出的异常</li>
+</ol>
+<p>设置 monitor 的时候，会判断是否在被调试，这是通过 sysctl 获取进程的信息的方式来进行判断的：</p>
+<pre tabindex="0"><code>/// 是否在被调试
+bool ksdebug_isBeingTraced(void) {
+    /// 查询进程信息结果的结构体
+    struct kinfo_proc procInfo;
+    size_t structSize = sizeof(procInfo);
+    int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()};
+    
+    /// 通过 sysctl 获取进程信息
+    if(sysctl(mib, sizeof(mib)/sizeof(*mib), &amp;procInfo, &amp;structSize, NULL, 0) != 0)
+    {
+        KSLOG_ERROR(&#34;sysctl: %s&#34;, strerror(errno));
+        return false;
+    }
+    
+    /// 通过进程信息判断是否被调试
+    return (procInfo.kp_proc.p_flag &amp; P_TRACED) != 0;
+}
+</code></pre><p>最终通过 for 循环，遍历启动每一个 monitor。启动某个 monitor 的方法如下：</p>
+<pre tabindex="0"><code>/// 启动某个 monitor
+static inline void setMonitorEnabled(Monitor* monitor, bool isEnabled)
+{
+    KSCrashMonitorAPI* api = getAPI(monitor);
+    /// 调用各个 monitor 的 enable 方法，启动 monitor
+    if(api != NULL &amp;&amp; api-&gt;setEnabled != NULL)
+    {
+        api-&gt;setEnabled(isEnabled);
+    }
+}
+</code></pre><p>Monitor 是一个结构体，它保存了 Monitor 的类型以及启动 monitor 的方法：</p>
+<pre tabindex="0"><code>/// monitor 的数据结构
+typedef struct
+{
+    KSCrashMonitorType monitorType; // 类型
+    KSCrashMonitorAPI* (*getAPI)(void); // monitor的api，是否启动，设置启动，设置上下文
+} Monitor;
+</code></pre><h2 id="mach层异常">Mach层异常</h2>
+<h3 id="开启mach层异常捕获">开启Mach层异常捕获</h3>
+<p>Mach 异常在 KSCrashMonitor_MachException.c 中被处理外部调用 setEnabled() 开启 Mach 异常的监听：</p>
+<pre tabindex="0"><code>static void setEnabled(bool isEnabled)
+{
+    if(isEnabled != g_isEnabled)
+    {
+        g_isEnabled = isEnabled;
+        if(isEnabled) // 变成开启状态-&gt;设置一级事件ID和二级事件ID（EventID）
+        {
+            ksid_generate(g_primaryEventID);
+            ksid_generate(g_secondaryEventID);
+            if(!installExceptionHandler())
+            {
+                return;
+            }
+        }
+        else // 不需要开启
+        {
+            uninstallExceptionHandler();
+        }
+    }
+}
+</code></pre><p>其中包含两个 c 函数，installExceptionHandler() 和 uninstallExceptionHandler() 分别用于开启和关闭监听。
+这里设置了两个事件ID，一级事件记录的是crash发生时候的信息，二级事件记录的是crash发生后又有crash发生的信息</p>
+<blockquote>
+<p>在说如何捕捉 Mach 异常前，先补充什么是Mach，Mach是一种操作系统微内核，是许多新操作系统的设计基础。iOS操作系统框架基于Drawin，其核心部分是Mach微内核和BSD（Berkeley Software Distribution）子系统。Mach主要负责进程和线程管理，内存管理，进程间通信，属于硬件层面。BSD主要负责文件系统，网络协议栈、进程管理属于系统层面。</p>
+<p>概括来说一个Mach微内核有多个Task进行进程管理，task可以拥有多个thread，thread之间共享task的上下文资源，task之间以消息队列的方式通过port进程间通信（IPC），通信内容为message单元</p>
+<p>Mach微内核中的基础概念：
+Tasks，拥有一组系统资源的对象，允许”thread”在其中执行。每一个BSD 进程都在底层关联了一个Mach 任务对象(BSD 层在 Mach 之上，提供了更高层次的功能，比如 UNIX 进程模型，POSIX 线程模型等)
+Threads，执行的基本单位，拥有task的上下文，并共享其资源。
+Ports，task之间通讯的一组受保护的消息队列；task可对任何port发送/接收数据。
+Message，有类型的数据对象集合，只可以发送到port。
+关于什么是微内核？微内核把系统服务，比如文件管理、虚拟内存、设备I/O，单独包装为一个个模块。微内核作为底层使用进程间通信收发消息。这一来大量的内核代码可以转移到用户空间，使内核变得更小。这种方式拓展性强，但是通信有效率损耗。宏内核正相反，把所有系统服务放在一起。
+以上概括来说，</p>
+<p>UNIX 下，触发到内核态需要通过系统调用触发陷阱。Mach可以通过申请port，然后利用IPC机制向这个port发送消息。</p>
+<p>陷阱是软中断，是主动触发的，立刻同步处理。异常是当前指令执行出现问题，是被动的，立刻同步处理。中断是外部硬件触发的，是异步的。</p>
+</blockquote>
+<p><strong>当异常发生时，内核会向当前 task 的某个专门处理异常的 port 发消息，该消息会依次被转为 signal，NSException 抛出。如果我们要在 Mach 层捕获异常，就需要注册自己的 port，来接收这个异常：</strong></p>
+<pre tabindex="0"><code>/// 创建 mach 捕捉者
+static bool installExceptionHandler(void) {
+    KSLOG_DEBUG(&#34;Installing mach exception handler.&#34;);
+    
+    bool attributes_created = false;
+    pthread_attr_t attr;
+    
+    kern_return_t kr;
+    int error;
+    
+    /// 获取当前进程的 task
+    const task_t thisTask = mach_task_self();
+    exception_mask_t mask = EXC_MASK_BAD_ACCESS |
+    EXC_MASK_BAD_INSTRUCTION |
+    EXC_MASK_ARITHMETIC |
+    EXC_MASK_SOFTWARE |
+    EXC_MASK_BREAKPOINT;
+    
+    /// 保存之前的异常处理端口到 g_previousExceptionPorts 中
+    KSLOG_DEBUG(&#34;Backing up original exception ports.&#34;);
+    kr = task_get_exception_ports(thisTask,
+                                  mask,
+                                  g_previousExceptionPorts.masks,
+                                  &amp;g_previousExceptionPorts.count,
+                                  g_previousExceptionPorts.ports,
+                                  g_previousExceptionPorts.behaviors,
+                                  g_previousExceptionPorts.flavors);
+    if(kr != KERN_SUCCESS)
+    {
+        KSLOG_ERROR(&#34;task_get_exception_ports: %s&#34;, mach_error_string(kr));
+        goto failed;
+    }
+    
+    /// 如果自己的异常处理端口 g_exceptionPort 是空的，那么创建
+    if(g_exceptionPort == MACH_PORT_NULL)
+    {
+        KSLOG_DEBUG(&#34;Allocating new port with receive rights.&#34;);
+        /// 创建新的异常处理端口
+        kr = mach_port_allocate(thisTask,
+                                MACH_PORT_RIGHT_RECEIVE,
+                                &amp;g_exceptionPort);
+        if(kr != KERN_SUCCESS)
+        {
+            KSLOG_ERROR(&#34;mach_port_allocate: %s&#34;, mach_error_string(kr));
+            goto failed;
+        }
+        
+        KSLOG_DEBUG(&#34;Adding send rights to port.&#34;);
+        /// 申请端口权限
+        kr = mach_port_insert_right(thisTask,
+                                    g_exceptionPort,
+                                    g_exceptionPort,
+                                    MACH_MSG_TYPE_MAKE_SEND);
+        if(kr != KERN_SUCCESS)
+        {
+            KSLOG_ERROR(&#34;mach_port_insert_right: %s&#34;, mach_error_string(kr));
+            goto failed;
+        }
+    }
+    
+    KSLOG_DEBUG(&#34;Installing port as exception handler.&#34;);
+    /// 把异常设置为自己的 port
+    kr = task_set_exception_ports(thisTask,
+                                  mask,
+                                  g_exceptionPort,
+                                  (int)(EXCEPTION_DEFAULT | MACH_EXCEPTION_CODES),
+                                  THREAD_STATE_NONE);
+    if(kr != KERN_SUCCESS)
+    {
+        KSLOG_ERROR(&#34;task_set_exception_ports: %s&#34;, mach_error_string(kr));
+        goto failed;
+    }
+    
+    KSLOG_DEBUG(&#34;Creating secondary exception thread (suspended).&#34;);
+    /// 以下整个部分用来创建读取异常端口数据的线程,设置异常端口的处理函数
+    pthread_attr_init(&amp;attr);
+    attributes_created = true;
+    pthread_attr_setdetachstate(&amp;attr, PTHREAD_CREATE_DETACHED);
+    /// 创建第二条处理crash的线程，以防止主处理crash的线程crash了
+    error = pthread_create(&amp;g_secondaryPThread,
+                           &amp;attr,
+                           &amp;handleExceptions,
+                           (void*)kThreadSecondary);
+    if(error != 0)
+    {
+        KSLOG_ERROR(&#34;pthread_create_suspended_np: %s&#34;, strerror(error));
+        goto failed;
+    }
+    /// pthread与mach内核层的thread绑定，并且返回mach内存层的线程
+    g_secondaryMachThread = pthread_mach_thread_np(g_secondaryPThread);
+    /// 保存线程
+    ksmc_addReservedThread(g_secondaryMachThread);
+    
+    KSLOG_DEBUG(&#34;Creating primary exception thread.&#34;);
+    /// 创建主处理crash的线程
+    error = pthread_create(&amp;g_primaryPThread,
+                           &amp;attr,
+                           &amp;handleExceptions,
+                           (void*)kThreadPrimary);
+    if(error != 0)
+    {
+        KSLOG_ERROR(&#34;pthread_create: %s&#34;, strerror(error));
+        goto failed;
+    }
+    pthread_attr_destroy(&amp;attr);
+    /// pthread与mach内核层的thread绑定，并且返回mach内存层的线程
+    g_primaryMachThread = pthread_mach_thread_np(g_primaryPThread);
+    /// 保存线程
+    ksmc_addReservedThread(g_primaryMachThread);
+    
+    KSLOG_DEBUG(&#34;Mach exception handler installed.&#34;);
+    return true;
+    
+    
+failed:
+    KSLOG_DEBUG(&#34;Failed to install mach exception handler.&#34;);
+    if(attributes_created)
+    {
+        pthread_attr_destroy(&amp;attr);
+    }
+    uninstallExceptionHandler();
+    return false;
+}
+</code></pre><p>代码很长，关键地方做了注释：</p>
+<ol>
+<li>通过 mach_task_self() 获取当前进程对应的 task。</li>
+<li>通过 task_get_exception_ports() 获取原本处理异常的 port，并保存在 g_previousExceptionPorts 中。</li>
+<li>通过 mach_port_allocate() 创建新的异常处理端口。</li>
+<li>通过 mach_port_insert_right() 给这个新创建的端口申请权限</li>
+<li>通过 task_set_exception_ports() 把异常接收的 port 设置为自己新创建的 port</li>
+<li>创建好 port 之后，就可以创建自己的线程去一直读取 port 上的消息了。通过 pthread_create() 创建自己的线程，以及设置好执行的方法为 handleExceptions。</li>
+</ol>
+<p>这里会有个疑问，原先系统层面监测异常的端口被新创建的端口替换了，会引起系统无法获取到闪退反馈到应用层面。在后面自己创建的端口收集到异常后会把原始crash的信息，全部重新通过mach_msg发送给。</p>
+<h3 id="监测到mach层异常并收集">监测到Mach层异常并收集</h3>
+<pre tabindex="0"><code>// 等待异常消息，卸载异常端口，记录异常信息，并生成报告。
+static void* handleExceptions(void* const userData) {
+    MachExceptionMessage exceptionMessage = {{0}};
+    MachReplyMessage replyMessage = {{0}};
+    char* eventID = g_primaryEventID;
+    
+    const char* threadName = (const char*) userData;
+    pthread_setname_np(threadName);
+    if(threadName == kThreadSecondary) // 第二线程
+    {
+        KSLOG_DEBUG(&#34;This is the secondary thread. Suspending.&#34;); // 挂起
+        thread_suspend((thread_t)ksthread_self());
+        eventID = g_secondaryEventID;
+    }
+    
+    /// 等待异常
+    for(;;)
+    {
+        KSLOG_DEBUG(&#34;Waiting for mach exception&#34;);
+        
+        // Wait for a message.
+        /// 不断调用 mach_msg 接收消息，从异常端口中读取信息到 exceptionMessage 中
+        kern_return_t kr = mach_msg(&amp;exceptionMessage.header, // msg头部
+                                    MACH_RCV_MSG,            // 接收
+                                    0,
+                                    sizeof(exceptionMessage),
+                                    g_exceptionPort,         // 端口
+                                    MACH_MSG_TIMEOUT_NONE,   // 超时时间=0
+                                    MACH_PORT_NULL);         // 端口号
+        
+        /// 上面一直循环读取，直到读取成功了，进入后面的处理函数中
+        if(kr == KERN_SUCCESS)
+        {
+            break;
+        }
+        
+        // Loop and try again on failure.
+        KSLOG_ERROR(&#34;mach_msg: %s&#34;, mach_error_string(kr));
+    }
+    
+    KSLOG_DEBUG(&#34;Trapped mach exception code 0x%llx, subcode 0x%llx&#34;,
+                exceptionMessage.code[0], exceptionMessage.code[1]);
+    /// 捕获异常code，异常subcode
+    if(g_isEnabled)
+    {
+        thread_act_array_t threads = NULL;
+        mach_msg_type_number_t numThreads = 0;
+        /// 暂停所有非当前线程以及白名单线程的线程
+        ksmc_suspendEnvironment(&amp;threads, &amp;numThreads);
+        g_isHandlingCrash = true; // 记录开始处理异常
+        
+        /// 捕捉到异常之后清除所有的 monitor
+        kscm_notifyFatalExceptionCaptured(true);
+        
+        KSLOG_DEBUG(&#34;Exception handler is installed. Continuing exception handling.&#34;);
+        
+        
+        // Switch to the secondary thread if necessary, or uninstall the handler
+        // to avoid a death loop.
+        /// 捕捉到 exception 后，恢复原来的 port
+        if(ksthread_self() == g_primaryMachThread)
+        {
+            KSLOG_DEBUG(&#34;This is the primary exception thread. Activating secondary thread.&#34;);
+            // TODO: This was put here to avoid a freeze. Does secondary thread ever fire?
+            /// 重新存储异常端口
+            restoreExceptionPorts();
+            if(thread_resume(g_secondaryMachThread) != KERN_SUCCESS)
+            {
+                KSLOG_DEBUG(&#34;Could not activate secondary thread. Restoring original exception ports.&#34;);
+            }
+        }
+        else
+        {
+            KSLOG_DEBUG(&#34;This is the secondary exception thread.&#34;);// Restoring original exception ports.&#34;);
+            //            restoreExceptionPorts();
+        }
+        
+        // Fill out crash information
+        KSLOG_DEBUG(&#34;Fetching machine state.&#34;);
+        
+        /// 设置 crash 信息的 context上下文
+        
+        /// 创建一个 machineContext 用来保存异常信息
+        KSMC_NEW_CONTEXT(machineContext);
+        KSCrash_MonitorContext* crashContext = &amp;g_monitorContext;
+        crashContext-&gt;offendingMachineContext = machineContext;
+        /// 创建一个遍历调用栈的 cursor
+        kssc_initCursor(&amp;g_stackCursor, NULL, NULL);
+        
+        /// 把线程信息附加到 machineContext 上
+        if(ksmc_getContextForThread(exceptionMessage.thread.name, machineContext, true))
+        {
+            kssc_initWithMachineContext(&amp;g_stackCursor, KSSC_MAX_STACK_DEPTH, machineContext);
+            KSLOG_TRACE(&#34;Fault address %p, instruction address %p&#34;,
+                        kscpu_faultAddress(machineContext), kscpu_instructionAddress(machineContext));
+            if(exceptionMessage.exception == EXC_BAD_ACCESS)
+            {
+                crashContext-&gt;faultAddress = kscpu_faultAddress(machineContext);
+            }
+            else
+            {
+                crashContext-&gt;faultAddress = kscpu_instructionAddress(machineContext);
+            }
+        }
+        
+        KSLOG_DEBUG(&#34;Filling out context.&#34;);
+        
+        /// 填充上下文
+        crashContext-&gt;crashType = KSCrashMonitorTypeMachException;
+        crashContext-&gt;eventID = eventID;
+        crashContext-&gt;registersAreValid = true;
+        crashContext-&gt;mach.type = exceptionMessage.exception;
+        crashContext-&gt;mach.code = exceptionMessage.code[0] &amp; (int64_t)MACH_ERROR_CODE_MASK;
+        crashContext-&gt;mach.subcode = exceptionMessage.code[1] &amp; (int64_t)MACH_ERROR_CODE_MASK;
+        if(crashContext-&gt;mach.code == KERN_PROTECTION_FAILURE &amp;&amp; crashContext-&gt;isStackOverflow)
+        {
+            // A stack overflow should return KERN_INVALID_ADDRESS, but
+            // when a stack blasts through the guard pages at the top of the stack,
+            // it generates KERN_PROTECTION_FAILURE. Correct for this.
+            crashContext-&gt;mach.code = KERN_INVALID_ADDRESS;
+        }
+        
+        /// 将 mach 异常转为对应的 signal
+        crashContext-&gt;signal.signum = signalForMachException(crashContext-&gt;mach.type, crashContext-&gt;mach.code);
+        crashContext-&gt;stackCursor = &amp;g_stackCursor;
+        
+        /// 回调异常
+        /// context 交给 kscrashmonitor 处理
+        kscm_handleException(crashContext);
+        
+        KSLOG_DEBUG(&#34;Crash handling complete. Restoring original handlers.&#34;);
+        /// 结束了捕获恢复所有线程, 存储原始句柄
+        g_isHandlingCrash = false;
+        ksmc_resumeEnvironment(threads, numThreads);
+    }
+    
+    KSLOG_DEBUG(&#34;Replying to mach exception message.&#34;);
+    // Send a reply saying &#34;I didn&#39;t handle this exception&#34;.
+    /// 发送msg给系统异常处理
+    replyMessage.header = exceptionMessage.header;
+    replyMessage.NDR = exceptionMessage.NDR;
+    replyMessage.returnCode = KERN_FAILURE;
+    
+    mach_msg(&amp;replyMessage.header,
+             MACH_SEND_MSG,
+             sizeof(replyMessage),
+             0,
+             MACH_PORT_NULL,
+             MACH_MSG_TIMEOUT_NONE,
+             MACH_PORT_NULL);
+    
+    return NULL;
+}
+</code></pre><p>整体的监听crash并收集流程：</p>
+<ol>
+<li>不停循环通过 mach_msg() 读取 port 中传来的消息。</li>
+<li>读取成功后挂起所有线程。</li>
+<li>清除所有的 monitor，恢复原来的 port</li>
+<li>抓取所有线程的信息保存到 KSMachineContext 结构体中</li>
+<li>将各种信息交给 crashContext</li>
+<li>把 crashContext 抛出给外部处理方法</li>
+<li>恢复所有的线程</li>
+<li>通过 mach_msg() 再发出一个消息告知没有处理这个异常</li>
+</ol>
+<p>通过方法 task_threads() 获取当前 task 的所有线程，通过 thread_suspend() 方法挂起某个线程：</p>
+<pre tabindex="0"><code>/// 暂停所有线程
+void ksmc_suspendEnvironment(__unused thread_act_array_t *suspendedThreads, __unused mach_msg_type_number_t *numSuspendedThreads)
+{
+#if KSCRASH_HAS_THREADS_API
+    KSLOG_DEBUG(&#34;Suspending environment.&#34;);
+    kern_return_t kr;
+    const task_t thisTask = mach_task_self();
+    const thread_t thisThread = (thread_t)ksthread_self();
+    
+    /// task_threads获取当前task线程
+    if((kr = task_threads(thisTask, suspendedThreads, numSuspendedThreads)) != KERN_SUCCESS)
+    {
+        KSLOG_ERROR(&#34;task_threads: %s&#34;, mach_error_string(kr));
+        return;
+    }
+    
+    for(mach_msg_type_number_t i = 0; i &lt; *numSuspendedThreads; i++)
+    {
+        thread_t thread = (*suspendedThreads)[i];
+        if(thread != thisThread &amp;&amp; !isThreadInList(thread, g_reservedThreads, g_reservedThreadsCount))
+        {
+            if((kr = thread_suspend(thread)) != KERN_SUCCESS)
+            {
+                // Record the error and keep going.
+                KSLOG_ERROR(&#34;thread_suspend (%08x): %s&#34;, thread, mach_error_string(kr));
+            }
+        }
+    }
+    
+    KSLOG_DEBUG(&#34;Suspend complete.&#34;);
+#endif
+}
+</code></pre><p>通过 task_threads() 方法获取所有的 thread：</p>
+<pre tabindex="0"><code>/// 获取当前 task 所有的 thread，把它保存到 context 中
+static inline bool getThreadList(KSMachineContext* context)
+{
+    const task_t thisTask = mach_task_self();
+    KSLOG_DEBUG(&#34;Getting thread list&#34;);
+    kern_return_t kr;
+    thread_act_array_t threads;
+    mach_msg_type_number_t actualThreadCount;
+
+    if((kr = task_threads(thisTask, &amp;threads, &amp;actualThreadCount)) != KERN_SUCCESS)
+    {
+        KSLOG_ERROR(&#34;task_threads: %s&#34;, mach_error_string(kr));
+        return false;
+    }
+    KSLOG_TRACE(&#34;Got %d threads&#34;, context-&gt;threadCount);
+    int threadCount = (int)actualThreadCount;
+    int maxThreadCount = sizeof(context-&gt;allThreads) / sizeof(context-&gt;allThreads[0]);
+    if(threadCount &gt; maxThreadCount)
+    {
+        KSLOG_ERROR(&#34;Thread count %d is higher than maximum of %d&#34;, threadCount, maxThreadCount);
+        threadCount = maxThreadCount;
+    }
+    for(int i = 0; i &lt; threadCount; i++)
+    {
+        context-&gt;allThreads[i] = threads[i];
+    }
+    context-&gt;threadCount = threadCount;
+
+    for(mach_msg_type_number_t i = 0; i &lt; actualThreadCount; i++)
+    {
+        mach_port_deallocate(thisTask, threads[i]);
+    }
+    vm_deallocate(thisTask, (vm_address_t)threads, sizeof(thread_t) * actualThreadCount);
+
+    return true;
+}
+</code></pre><p>恢复线程的时候，使用相应的 thread_resume() 方法：</p>
+<pre tabindex="0"><code>/// 恢复所有线程
+void ksmc_resumeEnvironment(__unused thread_act_array_t threads, __unused mach_msg_type_number_t numThreads)
+{
+#if KSCRASH_HAS_THREADS_API
+    KSLOG_DEBUG(&#34;Resuming environment.&#34;);
+    kern_return_t kr;
+    const task_t thisTask = mach_task_self();
+    const thread_t thisThread = (thread_t)ksthread_self();
+    
+    if(threads == NULL || numThreads == 0)
+    {
+        KSLOG_ERROR(&#34;we should call ksmc_suspendEnvironment() first&#34;);
+        return;
+    }
+    
+    for(mach_msg_type_number_t i = 0; i &lt; numThreads; i++)
+    {
+        thread_t thread = threads[i];
+        if(thread != thisThread &amp;&amp; !isThreadInList(thread, g_reservedThreads, g_reservedThreadsCount))
+        {
+            if((kr = thread_resume(thread)) != KERN_SUCCESS)
+            {
+                // Record the error and keep going.
+                KSLOG_ERROR(&#34;thread_resume (%08x): %s&#34;, thread, mach_error_string(kr));
+            }
+        }
+    }
+    
+    for(mach_msg_type_number_t i = 0; i &lt; numThreads; i++)
+    {
+        mach_port_deallocate(thisTask, threads[i]);
+    }
+    vm_deallocate(thisTask, (vm_address_t)threads, sizeof(thread_t) * numThreads);
+    
+    KSLOG_DEBUG(&#34;Resume complete.&#34;);
+#endif
+}
+</code></pre><p><strong>所有 Mach 异常都在 BSD 层被 ux_exception 转换为相应的 Unix 信号，并通过 threadsignal 将信号投递到出错的线程。在 Mach 层，我们可以直接通过 Mach 异常推测出 Signal 类型：</strong></p>
+<pre tabindex="0"><code>// 将内核层错误码 mach.type 和mach.code 转为 sytem层 signal
+static int signalForMachException(exception_type_t exception, mach_exception_code_t code)
+{
+    switch(exception) {
+        case EXC_ARITHMETIC: return SIGFPE;
+        case EXC_BAD_ACCESS: return code == KERN_INVALID_ADDRESS ? SIGSEGV/*虚拟内存坏地址错误*/ : SIGBUS/*硬件内存访问错误*/;
+        case EXC_BAD_INSTRUCTION: return SIGILL/*无效或者不支持的机器命令*/;
+        case EXC_BREAKPOINT: return SIGTRAP;/* 调试断点*/
+        case EXC_EMULATION: return SIGEMT;/*模拟器错误*/
+        case EXC_SOFTWARE: {
+            switch (code) {
+                case EXC_UNIX_BAD_SYSCALL:
+                    return SIGSYS;/* 被系统层禁止的调用*/
+                case EXC_UNIX_BAD_PIPE:
+                    return SIGPIPE;/* 系统内核通信某一方已经关闭错误*/
+                case EXC_UNIX_ABORT:
+                    return SIGABRT; /*abort,多为assert断言*/
+                case EXC_SOFT_SIGNAL:
+                    return SIGKILL;/*强制关闭，比如资源不足,用户强关*/
+            }
+            break;
+        }
+    }
+    return 0;
+}
+</code></pre><h3 id="取消mach层检测">取消Mach层检测</h3>
+<p>在捕获到异常后就要取消原本的监听，主要分为两步：</p>
+<ol>
+<li>将原本用作监测异常的 port 恢复</li>
+<li>结束自己创建的用于处理异常的线程</li>
+</ol>
+<pre tabindex="0"><code>// 取消异常监听
+static void uninstallExceptionHandler(void)
+{
+    KSLOG_DEBUG(&#34;Uninstalling mach exception handler.&#34;);
+    
+    // NOTE: Do not deallocate the exception port. If a secondary crash occurs
+    // it will hang the process.
+    /// 恢复原本的mach处理端口
+    restoreExceptionPorts();
+    
+    thread_t thread_self = (thread_t)ksthread_self();
+    
+    /// 当前不是 primary 处理 crash 的线程，那么终止线程
+    if(g_primaryPThread != 0 &amp;&amp; g_primaryMachThread != thread_self)
+    {
+        KSLOG_DEBUG(&#34;Canceling primary exception thread.&#34;);
+        if(g_isHandlingCrash)
+        {
+            thread_terminate(g_primaryMachThread);
+        }
+        else
+        {
+            pthread_cancel(g_primaryPThread);
+        }
+        g_primaryMachThread = 0;
+        g_primaryPThread = 0;
+    }
+    
+    /// 当前不是备用处理 crash 的线程，那么终止线程
+    if(g_secondaryPThread != 0 &amp;&amp; g_secondaryMachThread != thread_self)
+    {
+        KSLOG_DEBUG(&#34;Canceling secondary exception thread.&#34;);
+        if(g_isHandlingCrash)
+        {
+            thread_terminate(g_secondaryMachThread);
+        }
+        else
+        {
+            pthread_cancel(g_secondaryPThread);
+        }
+        g_secondaryMachThread = 0;
+        g_secondaryPThread = 0;
+    }
+    
+    /// 释放检测端口port
+    g_exceptionPort = MACH_PORT_NULL;
+    KSLOG_DEBUG(&#34;Mach exception handlers uninstalled.&#34;);
+}
+</code></pre><h2 id="signal异常">signal异常</h2>
+<p>Mach 异常会在 BSD 层转化为相应的 UNIX 信号，投递到相应的线程中。我们同样可以捕捉相应的 Signal。</p>
+<h3 id="开启signal监测">开启signal监测</h3>
+<p>同样是调用 setEnabled() 方法，它会执行到 installSignalHandler() 方法中。相关的参数设置比较多，坦白来说确实不太好理解它们的作用，不过其实粗略的看下来也不影响对于主流程的理解。总的来说就是通过 sigaction() 方法记录下某个 siganl 对应的处理方法，并且保存先前的处理方法：</p>
+<pre tabindex="0"><code>/// 创建 signal 的捕捉者
+static bool installSignalHandler(void)
+{
+    KSLOG_DEBUG(&#34;Installing signal handler.&#34;);
+
+#if KSCRASH_HAS_SIGNAL_STACK
+
+    if(g_signalStack.ss_size == 0)
+    {
+        KSLOG_DEBUG(&#34;Allocating signal stack area.&#34;);
+        /// 初始化分配signal栈内存
+        g_signalStack.ss_size = SIGSTKSZ;
+        g_signalStack.ss_sp = malloc(g_signalStack.ss_size);
+    }
+
+    KSLOG_DEBUG(&#34;Setting signal stack area.&#34;);
+    if(sigaltstack(&amp;g_signalStack, NULL) != 0)
+    {
+        KSLOG_ERROR(&#34;signalstack: %s&#34;, strerror(errno));
+        goto failed;
+    }
+#endif
+
+    /// 需要监听的 signal 数组
+    const int* fatalSignals = kssignal_fatalSignals();
+    /// 需要监听的 signal 数组大小
+    int fatalSignalsCount = kssignal_numFatalSignals();
+
+    if(g_previousSignalHandlers == NULL)
+    {
+        KSLOG_DEBUG(&#34;Allocating memory to store previous signal handlers.&#34;);
+        /// 设置该 signal 对应的处理方法，并且保存原始的处理方法
+        g_previousSignalHandlers = malloc(sizeof(*g_previousSignalHandlers)
+                                          * (unsigned)fatalSignalsCount);
+    }
+
+    struct sigaction action = {{0}};
+    action.sa_flags = SA_SIGINFO | SA_ONSTACK;
+#if KSCRASH_HOST_APPLE &amp;&amp; defined(__LP64__)
+    action.sa_flags |= SA_64REGSET;
+#endif
+    sigemptyset(&amp;action.sa_mask);
+    action.sa_sigaction = &amp;handleSignal;
+
+    for(int i = 0; i &lt; fatalSignalsCount; i++)
+    {
+        KSLOG_DEBUG(&#34;Assigning handler for signal %d&#34;, fatalSignals[i]);
+        if(sigaction(fatalSignals[i], &amp;action, &amp;g_previousSignalHandlers[i]) != 0)
+        {
+            char sigNameBuff[30];
+            const char* sigName = kssignal_signalName(fatalSignals[i]);
+            if(sigName == NULL)
+            {
+                snprintf(sigNameBuff, sizeof(sigNameBuff), &#34;%d&#34;, fatalSignals[i]);
+                sigName = sigNameBuff;
+            }
+            KSLOG_ERROR(&#34;sigaction (%s): %s&#34;, sigName, strerror(errno));
+            // Try to reverse the damage
+            for(i--;i &gt;= 0; i--)
+            {
+                sigaction(fatalSignals[i], &amp;g_previousSignalHandlers[i], NULL);
+            }
+            goto failed;
+        }
+    }
+    KSLOG_DEBUG(&#34;Signal handlers installed.&#34;);
+    return true;
+
+failed:
+    KSLOG_DEBUG(&#34;Failed to install signal handlers.&#34;);
+    return false;
+}
+</code></pre><p>fatal_signal 包括如下：</p>
+<pre tabindex="0"><code>static const int g_fatalSignals[] =
+{
+    SIGABRT,
+    SIGBUS,
+    SIGFPE,
+    SIGILL,
+    SIGPIPE,
+    SIGSEGV,
+    SIGSYS,
+    SIGTRAP,
+};
+</code></pre><h3 id="监测到signal异常并收集">监测到signal异常并收集</h3>
+<p>处理异常的回调方法中会返回 signal 信息，以及一个 context：</p>
+<pre tabindex="0"><code>/// 处理signal异常
+static void handleSignal(int sigNum, siginfo_t* signalInfo, void* userContext)
+{
+    KSLOG_DEBUG(&#34;Trapped signal %d&#34;, sigNum);
+    if(g_isEnabled)
+    {
+        thread_act_array_t threads = NULL;
+        mach_msg_type_number_t numThreads = 0;
+        /// 暂停所有线程
+        ksmc_suspendEnvironment(&amp;threads, &amp;numThreads);
+        
+        /// 通知异常已经捕获（非异步的）
+        kscm_notifyFatalExceptionCaptured(false);
+
+        KSLOG_DEBUG(&#34;Filling out context.&#34;);
+        /// 初始化异常上下文
+        KSMC_NEW_CONTEXT(machineContext);
+        /// 保存 context 到 machineContext 中，并且获取 thread 信息
+        ksmc_getContextForSignal(userContext, machineContext);
+        /// 把 machineContext 放到  g_stackCursor 中
+        kssc_initWithMachineContext(&amp;g_stackCursor, KSSC_MAX_STACK_DEPTH, machineContext);
+
+        
+        /// 生成真正的 context
+        KSCrash_MonitorContext* crashContext = &amp;g_monitorContext;
+        memset(crashContext, 0, sizeof(*crashContext));
+        crashContext-&gt;crashType = KSCrashMonitorTypeSignal;
+        crashContext-&gt;eventID = g_eventID;
+        crashContext-&gt;offendingMachineContext = machineContext;
+        crashContext-&gt;registersAreValid = true;
+        crashContext-&gt;faultAddress = (uintptr_t)signalInfo-&gt;si_addr;
+        crashContext-&gt;signal.userContext = userContext;
+        crashContext-&gt;signal.signum = signalInfo-&gt;si_signo;
+        crashContext-&gt;signal.sigcode = signalInfo-&gt;si_code;
+        crashContext-&gt;stackCursor = &amp;g_stackCursor;
+
+        /// 把 context 传给外部处理函数
+        kscm_handleException(crashContext);
+        
+        /// 恢复原来的环境
+        ksmc_resumeEnvironment(threads, numThreads);
+    }
+
+    KSLOG_DEBUG(&#34;Re-raising signal for regular handlers to catch.&#34;);
+    
+    /// 重新抛出 signal
+    raise(sigNum);
+}
+</code></pre><p>整个流程和 Mach 异常还是非常类似的，先暂停线程，然后读取线程信息，再把 signal 信息线程信息保存到 context 中，传递给外部的处理函数。最后恢复原来的环境。</p>
+<h3 id="取消signal监测">取消signal监测</h3>
+<pre tabindex="0"><code>/// 取消捕捉 signal
+static void uninstallSignalHandler(void)
+{
+    KSLOG_DEBUG(&#34;Uninstalling signal handlers.&#34;);
+
+    const int* fatalSignals = kssignal_fatalSignals();
+    int fatalSignalsCount = kssignal_numFatalSignals();
+
+    for(int i = 0; i &lt; fatalSignalsCount; i++)
+    {
+        KSLOG_DEBUG(&#34;Restoring original handler for signal %d&#34;, fatalSignals[i]);
+        sigaction(fatalSignals[i], &amp;g_previousSignalHandlers[i], NULL);
+    }
+    
+#if KSCRASH_HAS_SIGNAL_STACK
+    g_signalStack = (stack_t){0};
+#endif
+    KSLOG_DEBUG(&#34;Signal handlers uninstalled.&#34;);
+}
+</code></pre><p>取消捕捉的方式和启动捕捉类似，都是通过sigaction()方法，不同的是，现在将原本的处理方法传回。</p>
+<h2 id="c异常">C++异常</h2>
+<h3 id="开启c异常监测">开启C++异常监测</h3>
+<p>通过 set_terminate() 方法设置自己的捕获函数：</p>
+<pre tabindex="0"><code>static void setEnabled(bool isEnabled)
+{
+    if(isEnabled != g_isEnabled)
+    {
+        g_isEnabled = isEnabled;
+        if(isEnabled)
+        {
+            initialize();
+
+            ksid_generate(g_eventID);
+            /// 保存原始的 c++ 处理 handler，设置自己的处理 handler
+            g_originalTerminateHandler = std::set_terminate(CPPExceptionTerminate);
+        }
+        else
+        {
+            /// 恢复原始的 c++ 处理 handler
+            std::set_terminate(g_originalTerminateHandler);
+        }
+        g_captureNextStackTrace = isEnabled;
+    }
+}
+</code></pre><h3 id="监测到c异常并收集">监测到C++异常并收集</h3>
+<pre tabindex="0"><code>/// c++ 处理函数
+static void CPPExceptionTerminate(void)
+{
+    thread_act_array_t threads = NULL;
+    mach_msg_type_number_t numThreads = 0;
+    
+    /// 挂起非处理现场和白名单线程的其他所有线程
+    ksmc_suspendEnvironment(&amp;threads, &amp;numThreads);
+    KSLOG_DEBUG(&#34;Trapped c++ exception&#34;);
+    const char* name = NULL;
+    std::type_info* tinfo = __cxxabiv1::__cxa_current_exception_type();
+    if(tinfo != NULL)
+    {
+        name = tinfo-&gt;name();
+    }
+    
+    if(name == NULL || strcmp(name, &#34;NSException&#34;) != 0)
+    {
+        /// 捕捉到 crash 后，清空 KSCrash 的所有 monitor
+        kscm_notifyFatalExceptionCaptured(false);
+        KSCrash_MonitorContext* crashContext = &amp;g_monitorContext;
+        memset(crashContext, 0, sizeof(*crashContext));
+
+        char descriptionBuff[DESCRIPTION_BUFFER_LENGTH];
+        const char* description = descriptionBuff;
+        descriptionBuff[0] = 0;
+
+        KSLOG_DEBUG(&#34;Discovering what kind of exception was thrown.&#34;);
+        g_captureNextStackTrace = false;
+        try
+        {
+            throw;
+        }
+        catch(std::exception&amp; exc)
+        {
+            strncpy(descriptionBuff, exc.what(), sizeof(descriptionBuff));
+        }
+#define CATCH_VALUE(TYPE, PRINTFTYPE) \
+catch(TYPE value)\
+{ \
+    snprintf(descriptionBuff, sizeof(descriptionBuff), &#34;%&#34; #PRINTFTYPE, value); \
+}
+        CATCH_VALUE(char,                 d)
+        CATCH_VALUE(short,                d)
+        CATCH_VALUE(int,                  d)
+        CATCH_VALUE(long,                ld)
+        CATCH_VALUE(long long,          lld)
+        CATCH_VALUE(unsigned char,        u)
+        CATCH_VALUE(unsigned short,       u)
+        CATCH_VALUE(unsigned int,         u)
+        CATCH_VALUE(unsigned long,       lu)
+        CATCH_VALUE(unsigned long long, llu)
+        CATCH_VALUE(float,                f)
+        CATCH_VALUE(double,               f)
+        CATCH_VALUE(long double,         Lf)
+        CATCH_VALUE(char*,                s)
+        catch(...)
+        {
+            description = NULL;
+        }
+        g_captureNextStackTrace = g_isEnabled;
+
+        // TODO: Should this be done here? Maybe better in the exception handler?
+        KSMC_NEW_CONTEXT(machineContext);
+        ksmc_getContextForThread(ksthread_self(), machineContext, true);
+
+        KSLOG_DEBUG(&#34;Filling out context.&#34;);
+        crashContext-&gt;crashType = KSCrashMonitorTypeCPPException;
+        crashContext-&gt;eventID = g_eventID;
+        crashContext-&gt;registersAreValid = false;
+        crashContext-&gt;stackCursor = &amp;g_stackCursor;
+        crashContext-&gt;CPPException.name = name;
+        crashContext-&gt;exceptionName = name;
+        crashContext-&gt;crashReason = description;
+        crashContext-&gt;offendingMachineContext = machineContext;
+
+        /// 处理异常
+        kscm_handleException(crashContext);
+    }
+    else
+    {
+        KSLOG_DEBUG(&#34;Detected NSException. Letting the current NSException handler deal with it.&#34;);
+    }
+    
+    /// 恢复线程
+    ksmc_resumeEnvironment(threads, numThreads);
+
+    KSLOG_DEBUG(&#34;Calling original terminate handler.&#34;);
+    
+    /// 触发原本的  handler
+    g_originalTerminateHandler();
+}
+</code></pre><h3 id="取消c异常监测">取消C++异常监测</h3>
+<p>C++异常检测无需取消，是通过记录并重写原先命名空间下的CPPExceptionTerminate方法，然后最后重新调用原先记录的方法。</p>
+<h2 id="nsexception异常">NSException异常</h2>
+<h3 id="开启nsexception异常监测">开启NSException异常监测</h3>
+<p>先通过 NSGetUncaughtExceptionHandler() 获取原先的异常处理函数，然后再通过 NSSetUncaughtExceptionHandler() 方法设置自己的处理函数。</p>
+<pre tabindex="0"><code>static void setEnabled(bool isEnabled)
+{
+    if(isEnabled != g_isEnabled)
+    {
+        g_isEnabled = isEnabled;
+        if(isEnabled)
+        {
+            KSLOG_DEBUG(@&#34;Backing up original handler.&#34;);
+            /// 拿到原来的 handler
+            g_previousUncaughtExceptionHandler = NSGetUncaughtExceptionHandler();
+            
+            /// 设置新的 handler
+            KSLOG_DEBUG(@&#34;Setting new handler.&#34;);
+            NSSetUncaughtExceptionHandler(&amp;handleUncaughtException);
+            KSCrash.sharedInstance.uncaughtExceptionHandler = &amp;handleUncaughtException;
+            KSCrash.sharedInstance.currentSnapshotUserReportedExceptionHandler = &amp;handleCurrentSnapshotUserReportedException;
+        }
+        else
+        {
+            KSLOG_DEBUG(@&#34;Restoring original handler.&#34;);
+            NSSetUncaughtExceptionHandler(g_previousUncaughtExceptionHandler);
+        }
+    }
+}
+</code></pre><h3 id="监测到nsexception异常并收集">监测到NSException异常并收集</h3>
+<p>关于调用堆栈的获取都不需要通过task，直接从 NSException 就可以获取到：</p>
+<pre tabindex="0"><code>static void handleException(NSException* exception, BOOL currentSnapshotUserReported) {
+    KSLOG_DEBUG(@&#34;Trapped exception %@&#34;, exception);
+    if(g_isEnabled)
+    {
+        thread_act_array_t threads = NULL;
+        mach_msg_type_number_t numThreads = 0;
+        ksmc_suspendEnvironment(&amp;threads, &amp;numThreads);
+        kscm_notifyFatalExceptionCaptured(false);
+
+        KSLOG_DEBUG(@&#34;Filling out context.&#34;);
+        
+        /// 调用堆栈的地址
+        NSArray* addresses = [exception callStackReturnAddresses];
+        NSUInteger numFrames = addresses.count;
+        uintptr_t* callstack = malloc(numFrames * sizeof(*callstack));
+        
+        /// 转为堆栈
+        for(NSUInteger i = 0; i &lt; numFrames; i++)
+        {
+            callstack[i] = (uintptr_t)[addresses[i] unsignedLongLongValue];
+        }
+
+        char eventID[37];
+        ksid_generate(eventID);
+        KSMC_NEW_CONTEXT(machineContext);
+        ksmc_getContextForThread(ksthread_self(), machineContext, true);
+        KSStackCursor cursor;
+        kssc_initWithBacktrace(&amp;cursor, callstack, (int)numFrames, 0);
+
+        KSCrash_MonitorContext* crashContext = &amp;g_monitorContext;
+        memset(crashContext, 0, sizeof(*crashContext));
+        crashContext-&gt;crashType = KSCrashMonitorTypeNSException;
+        crashContext-&gt;eventID = eventID;
+        crashContext-&gt;offendingMachineContext = machineContext;
+        crashContext-&gt;registersAreValid = false;
+        crashContext-&gt;NSException.name = [[exception name] UTF8String];
+        crashContext-&gt;NSException.userInfo = [[NSString stringWithFormat:@&#34;%@&#34;, exception.userInfo] UTF8String];
+        crashContext-&gt;exceptionName = crashContext-&gt;NSException.name;
+        crashContext-&gt;crashReason = [[exception reason] UTF8String];
+        crashContext-&gt;stackCursor = &amp;cursor;
+        crashContext-&gt;currentSnapshotUserReported = currentSnapshotUserReported;
+
+        KSLOG_DEBUG(@&#34;Calling main crash handler.&#34;);
+        
+        /// 回调异常， context 交给 kscrashmonitor 处理
+        kscm_handleException(crashContext);
+
+        free(callstack);
+        if (currentSnapshotUserReported) {
+            ksmc_resumeEnvironment(threads, numThreads);
+        }
+        if (g_previousUncaughtExceptionHandler != NULL)
+        {
+            KSLOG_DEBUG(@&#34;Calling original exception handler.&#34;);
+            g_previousUncaughtExceptionHandler(exception);
+        }
+    }
+}
+</code></pre><h3 id="取消nsexception异常监测">取消NSException异常监测</h3>
+<p>NSException跟C++类似，通过记录并替换原先的异常捕获函数地址，等捕获完成后重新调用原先的函数地址</p>
+<h2 id="deallock">DealLock</h2>
+<h3 id="开启deadlock监测">开启DeadLock监测</h3>
+<pre tabindex="0"><code>- (void) runMonitor
+{
+    BOOL cancelled = NO;
+    do
+    {
+        // Only do a watchdog check if the watchdog interval is &gt; 0.
+        // If the interval is &lt;= 0, just idle until the user changes it.
+        @autoreleasepool {
+            NSTimeInterval sleepInterval = g_watchdogInterval;
+            BOOL runWatchdogCheck = sleepInterval &gt; 0;
+            if(!runWatchdogCheck)
+            {
+                sleepInterval = kIdleInterval;
+            }
+            [NSThread sleepForTimeInterval:sleepInterval];
+            cancelled = self.monitorThread.isCancelled;
+            if(!cancelled &amp;&amp; runWatchdogCheck)
+            {
+                if(self.awaitingResponse) // 已经在等待响应
+                {
+                    [self handleDeadlock];
+                }
+                else
+                {
+                    [self watchdogPulse];  // 响应
+                }
+            }
+        }
+    } while (!cancelled);
+}
+</code></pre><p>处理死锁的检测通过一个符号变量控制开启一只看门狗，通过看门狗响应的方式监测。如果开启看门狗5秒内会等待狗响应，如果未响应两次，则出现死锁，开启收集DeadLock信息</p>
+<h3 id="处理deadlock">处理DeadLock</h3>
+<pre tabindex="0"><code>/// 处理死锁
+- (void) handleDeadlock
+{
+    thread_act_array_t threads = NULL;
+    mach_msg_type_number_t numThreads = 0;
+    
+    /// 暂停所有线程
+    ksmc_suspendEnvironment(&amp;threads, &amp;numThreads);
+    kscm_notifyFatalExceptionCaptured(false);
+
+    KSMC_NEW_CONTEXT(machineContext);
+    ksmc_getContextForThread(g_mainQueueThread, machineContext, false);
+    KSStackCursor stackCursor;
+    kssc_initWithMachineContext(&amp;stackCursor, KSSC_MAX_STACK_DEPTH, machineContext);
+    char eventID[37];
+    ksid_generate(eventID);
+
+    KSLOG_DEBUG(@&#34;Filling out context.&#34;);
+    KSCrash_MonitorContext* crashContext = &amp;g_monitorContext;
+    memset(crashContext, 0, sizeof(*crashContext));
+    crashContext-&gt;crashType = KSCrashMonitorTypeMainThreadDeadlock;
+    crashContext-&gt;eventID = eventID;
+    crashContext-&gt;registersAreValid = false;
+    crashContext-&gt;offendingMachineContext = machineContext;
+    crashContext-&gt;stackCursor = &amp;stackCursor;
+    
+    /// 收集异常，
+    kscm_handleException(crashContext);
+    /// 恢复所有线程
+    ksmc_resumeEnvironment(threads, numThreads);
+
+    KSLOG_DEBUG(@&#34;Calling abort()&#34;);
+    abort();
+}
+</code></pre><p>死锁异常挂起所有线程，处理结束后恢复所有线程会手动调用abort()关闭进程。</p>
+<h2 id="异常收集总结">异常收集总结</h2>
+<p>替换原来的捕获处理，捕获到异常后保存context信息，暂停所有线程获取所有线程信息，恢复原本的捕获处理方法，调用统一的异常处理函数。</p>
+<h1 id="crash回调">Crash回调</h1>
+<p>在接收到各种类型的Crash之后，会统一回调处理函数，处理函数会把Crash发生时候记录的信息全部写入磁盘：</p>
+<ol>
+<li>image信息</li>
+<li>线程信息:
+2.1 符号化调用堆栈
+2.2 寄存器
+2.3 调用堆栈信息
+2.4 内存地址对应的对象</li>
+<li>野指针信息</li>
+</ol>
+<p>crash回调的入口函数，它就是 KSCrashC.c 中的 onCrash() 方法：</p>
+<pre tabindex="0"><code>/// 接收到 crash 信息的处理函数
+static void onCrash(struct KSCrash_MonitorContext* monitorContext) {
+    if (monitorContext-&gt;currentSnapshotUserReported == false) {
+        KSLOG_DEBUG(&#34;Updating application state to note crash.&#34;);
+        kscrashstate_notifyAppCrash();
+    }
+    monitorContext-&gt;consoleLogPath = g_shouldAddConsoleLogToReport ? g_consoleLogPath : NULL;
+
+    /// 如果在crash的时候又crash了
+    if(monitorContext-&gt;crashedDuringCrashHandling)
+    {
+        /// 写入recrash信息
+        kscrashreport_writeRecrashReport(monitorContext, g_lastCrashReportFilePath);
+    }
+    else
+    {
+        char crashReportFilePath[KSFU_MAX_PATH_LENGTH];
+        int64_t reportID = kscrs_getNextCrashReport(crashReportFilePath);
+        strncpy(g_lastCrashReportFilePath, crashReportFilePath, sizeof(g_lastCrashReportFilePath));
+        
+        /// 将 context 转为 report 写入路径crashReportFilePath中
+        kscrashreport_writeStandardReport(monitorContext, crashReportFilePath);
+
+        if(g_reportWrittenCallback)
+        {
+            g_reportWrittenCallback(reportID);
+        }
+    }
+}
+</code></pre><p>从上面可以可以看到crash的时候monitorContext-&gt;crashedDuringCrashHandling又有oncrash()的上下文，将会通过kscrashreport_writeRecrashReport()进入重复闪退的逻辑</p>
+<p>其中重要的就是将 context 写入文件的 kscrashreport_writeStandardReport() 方法：</p>
+<pre tabindex="0"><code>/// 将 context 转为 report 写入 path
+void kscrashreport_writeStandardReport(const KSCrash_MonitorContext* const monitorContext, const char* const path)
+{
+    KSLOG_INFO(&#34;Writing crash report to %s&#34;, path);
+    /// 每个buffer长度
+    char writeBuffer[1024];
+    KSBufferedWriter bufferedWriter;
+
+    if(!ksfu_openBufferedWriter(&amp;bufferedWriter, path, writeBuffer, sizeof(writeBuffer)))
+    {
+        return;
+    }
+
+    ksccd_freeze();
+    
+    /// jsonContext 的 userData 是 writer  writer 的 context 是 jsonContext
+    KSJSONEncodeContext jsonContext;
+    jsonContext.userData = &amp;bufferedWriter;
+    /// 写入操作的执行者
+    KSCrashReportWriter concreteWriter;
+    KSCrashReportWriter* writer = &amp;concreteWriter;
+    /// 初始化 writer书写器
+    prepareReportWriter(writer, &amp;jsonContext);
+
+    ksjson_beginEncode(getJsonContext(writer), true, addJSONData, &amp;bufferedWriter);
+
+    /// 将 “{” 写入 buffer
+    writer-&gt;beginObject(writer, KSCrashField_Report);
+    {
+        /// 写入基本信息
+        writeReportInfo(writer,
+                        KSCrashField_Report,//&#34;report&#34;
+                        KSCrashReportType_Standard,//&#34;standard&#34;
+                        monitorContext-&gt;eventID,
+                        monitorContext-&gt;System.processName);
+        
+        /// 将 buffer 保存到磁盘中
+        ksfu_flushBufferedWriter(&amp;bufferedWriter);
+
+        /// 把所有 image 信息写入磁盘
+        writeBinaryImages(writer, KSCrashField_BinaryImages);
+        ksfu_flushBufferedWriter(&amp;bufferedWriter);
+
+        /// 写入 ZombieException 出错的信息
+        writeProcessState(writer, KSCrashField_ProcessState, monitorContext);
+        ksfu_flushBufferedWriter(&amp;bufferedWriter);
+
+        /// 写入系统信息
+        writeSystemInfo(writer, KSCrashField_System, monitorContext);
+        ksfu_flushBufferedWriter(&amp;bufferedWriter);
+
+        // &#34;crash&#34;
+        writer-&gt;beginObject(writer, KSCrashField_Crash);
+        {
+            // 写入error信息
+            writeError(writer, KSCrashField_Error, monitorContext);
+            ksfu_flushBufferedWriter(&amp;bufferedWriter);
+            /// 写入所有的线程信息
+            writeAllThreads(writer,
+                            KSCrashField_Threads,
+                            monitorContext,
+                            g_introspectionRules.enabled);
+            ksfu_flushBufferedWriter(&amp;bufferedWriter);
+        }
+        writer-&gt;endContainer(writer);
+
+        if(g_userInfoJSON != NULL)
+        {
+            addJSONElement(writer, KSCrashField_User, g_userInfoJSON, false);
+            ksfu_flushBufferedWriter(&amp;bufferedWriter);
+        }
+        else
+        {
+            writer-&gt;beginObject(writer, KSCrashField_User);
+        }
+        if(g_userSectionWriteCallback != NULL)
+        {
+            ksfu_flushBufferedWriter(&amp;bufferedWriter);
+            if (monitorContext-&gt;currentSnapshotUserReported == false) {
+                g_userSectionWriteCallback(writer);
+            }
+        }
+        writer-&gt;endContainer(writer);
+        ksfu_flushBufferedWriter(&amp;bufferedWriter);
+
+        /// 写入console_log里的debug信息
+        writeDebugInfo(writer, KSCrashField_Debug, monitorContext);
+    }
+    writer-&gt;endContainer(writer);
+    
+    ksjson_endEncode(getJsonContext(writer));
+    ksfu_closeBufferedWriter(&amp;bufferedWriter);
+    ksccd_unfreeze();
+}
+</code></pre><h2 id="写入数据方法">写入数据方法</h2>
+<p>不管哪些初始化方法，直接看 beginObject()，它在兜兜转转后调用了如下方法：</p>
+<pre tabindex="0"><code>/// 将 data 保存到 buffer 或者文件系统中
+static int addJSONData(const char* restrict const data, const int length, void* restrict userData)
+{
+    KSBufferedWriter* writer = (KSBufferedWriter*)userData;
+    const bool success = ksfu_writeBufferedWriter(writer, data, length);
+    return success ? KSJSON_OK : KSJSON_ERROR_CANNOT_ADD_DATA;
+}
+
+/// 将 data 写入 buffer 或者文件系统中
+bool ksfu_writeBufferedWriter(KSBufferedWriter* writer, const char* restrict const data, const int length)
+{
+    /// 如果 buffer 中的字符数量超出最大值了，那么 flush buffer 到文件系统中
+    
+    /// 如果buffer中的字符数量超出上一个在写入的buffer，直接写入
+    if(length &gt; writer-&gt;bufferLength - writer-&gt;position)
+    {
+        ksfu_flushBufferedWriter(writer);
+    }
+    /// 如果buffer中的字符数量超每个buffer最大长度，直接写入
+    if(length &gt; writer-&gt;bufferLength)
+    {
+        return ksfu_writeBytesToFD(writer-&gt;fd, data, length);
+    }
+    
+    /// 否则写入 buffer 中
+    memcpy(writer-&gt;buffer + writer-&gt;position, data, length);
+    writer-&gt;position += length;
+    return true;
+}
+
+/// 判断是否要将 buffer 写入文件
+bool ksfu_flushBufferedWriter(KSBufferedWriter* writer)
+{
+    if(writer-&gt;fd &gt; 0 &amp;&amp; writer-&gt;position &gt; 0)
+    {
+        
+        if(!ksfu_writeBytesToFD(writer-&gt;fd, writer-&gt;buffer, writer-&gt;position))
+        {
+            return false;
+        }
+        writer-&gt;position = 0;
+    }
+    return true;
+}
+
+
+/// 判断buffer能否写入文件中
+bool ksfu_writeBytesToFD(const int fd, const char* const bytes, int length)
+{
+    const char* pos = bytes;
+    while(length &gt; 0)
+    {
+        int bytesWritten = (int)write(fd, pos, (unsigned)length);
+        if(bytesWritten == -1)
+        {
+            KSLOG_ERROR(&#34;Could not write to fd %d: %s&#34;, fd, strerror(errno));
+            return false;
+        }
+        length -= bytesWritten;
+        pos += bytesWritten;
+    }
+    return true;
+}
+</code></pre><p>KSBufferedWriter 打开了一个写入流，同时维护了一个 1024 大小的 buffer。当 buffer 中的数据超出1024字节之后，就会将 buffer 写入文件中。</p>
+<h3 id="写入二进制文件binaryimage信息">写入二进制文件binaryImage信息</h3>
+<pre tabindex="0"><code>static void writeBinaryImages(const KSCrashReportWriter* const writer, const char* const key)
+{
+    /// 通过 _dyld_image_count 获取 image 的数量
+    const int imageCount = ksdl_imageCount();
+
+    writer-&gt;beginArray(writer, key);
+    {
+        for(int iImg = 0; iImg &lt; imageCount; iImg++)
+        {
+            /// 通过 _dyld_get_image_header 获取 image 信息
+            writeBinaryImage(writer, NULL, iImg);
+        }
+    }
+    writer-&gt;endContainer(writer);
+}
+
+/// 获取二进制文件镜像总数量
+int ksdl_imageCount(void)
+{
+    return (int)_dyld_image_count();
+}
+</code></pre><p>通过 dyld 提供的 _dyld_image_count() 方法获取加载的 image 数量。具体的 image 中的信息在 writeBinaryImage() 中获取：</p>
+<pre tabindex="0"><code>static void writeBinaryImage(const KSCrashReportWriter* const writer,
+                             const char* const key,
+                             const int index)
+{
+    // 初始化mach-o信息
+    KSBinaryImage image = {0};
+    /// 通过 _dyld_get_image_header 获取 image 信息
+    if(!ksdl_getBinaryImage(index, &amp;image))
+    {
+        return;
+    }
+
+    writer-&gt;beginObject(writer, key);
+    {
+        writer-&gt;addUIntegerElement(writer, KSCrashField_ImageAddress, image.address);
+        writer-&gt;addUIntegerElement(writer, KSCrashField_ImageVmAddress, image.vmAddress);
+        writer-&gt;addUIntegerElement(writer, KSCrashField_ImageSize, image.size);
+        writer-&gt;addStringElement(writer, KSCrashField_Name, image.name);
+        writer-&gt;addUUIDElement(writer, KSCrashField_UUID, image.uuid);
+        writer-&gt;addIntegerElement(writer, KSCrashField_CPUType, image.cpuType);
+        writer-&gt;addIntegerElement(writer, KSCrashField_CPUSubType, image.cpuSubType);
+        writer-&gt;addUIntegerElement(writer, KSCrashField_ImageMajorVersion, image.majorVersion);
+        writer-&gt;addUIntegerElement(writer, KSCrashField_ImageMinorVersion, image.minorVersion);
+        writer-&gt;addUIntegerElement(writer, KSCrashField_ImageRevisionVersion, image.revisionVersion);
+        if(image.crashInfoMessage != NULL)
+        {
+            writer-&gt;addStringElement(writer, KSCrashField_ImageCrashInfoMessage, image.crashInfoMessage);
+        }
+        if(image.crashInfoMessage2 != NULL)
+        {
+            writer-&gt;addStringElement(writer, KSCrashField_ImageCrashInfoMessage2, image.crashInfoMessage2);
+        }
+        if(image.crashInfoBacktrace != NULL)
+        {
+            writer-&gt;addStringElement(writer, KSCrashField_ImageCrashInfoBacktrace, image.crashInfoBacktrace);
+        }
+        if(image.crashInfoSignature != NULL)
+        {
+            writer-&gt;addStringElement(writer, KSCrashField_ImageCrashInfoSignature, image.crashInfoSignature);
+        }
+    }
+    writer-&gt;endContainer(writer);
+}
+
+/// 获取二进制（mach-o）header部分信息
+bool ksdl_getBinaryImage(int index, KSBinaryImage* buffer)
+{
+    /// 获取mach-o 镜像的头文件
+    const struct mach_header* header = _dyld_get_image_header((unsigned)index);
+    if(header == NULL)
+    {
+        return false;
+    }
+    
+    return ksdl_getBinaryImageForHeader((const void*)header, _dyld_get_image_name((unsigned)index), buffer);
+}
+
+/// 获取mach-o二进制文件头文件镜像
+bool ksdl_getBinaryImageForHeader(const void* const header_ptr, const char* const image_name, KSBinaryImage* buffer)
+{
+    const struct mach_header* header = (const struct mach_header*)header_ptr;
+    uintptr_t cmdPtr = firstCmdAfterHeader(header);
+    if(cmdPtr == 0)
+    {
+        return false;
+    }
+    
+    // Look for the TEXT segment to get the image size.
+    // Also look for a UUID command.
+    uint64_t imageSize = 0;
+    uint64_t imageVmAddr = 0;
+    uint64_t version = 0;
+    uint8_t* uuid = NULL;
+    
+    for(uint32_t iCmd = 0; iCmd &lt; header-&gt;ncmds; iCmd++)
+    {
+        struct load_command* loadCmd = (struct load_command*)cmdPtr;
+        switch(loadCmd-&gt;cmd)
+        {
+            case LC_SEGMENT: // 32位段区索引
+            {
+                struct segment_command* segCmd = (struct segment_command*)cmdPtr;
+                if(strcmp(segCmd-&gt;segname, SEG_TEXT) == 0)
+                {
+                    imageSize = segCmd-&gt;vmsize;
+                    imageVmAddr = segCmd-&gt;vmaddr;
+                }
+                break;
+            }
+            case LC_SEGMENT_64: // 64位段区索引
+            {
+                struct segment_command_64* segCmd = (struct segment_command_64*)cmdPtr;
+                if(strcmp(segCmd-&gt;segname, SEG_TEXT) == 0)
+                {
+                    imageSize = segCmd-&gt;vmsize;
+                    imageVmAddr = segCmd-&gt;vmaddr;
+                }
+                break;
+            }
+            case LC_UUID: // UUID
+            {
+                struct uuid_command* uuidCmd = (struct uuid_command*)cmdPtr;
+                uuid = uuidCmd-&gt;uuid;
+                break;
+            }
+            case LC_ID_DYLIB: // 动态链接库
+            {
+                
+                struct dylib_command* dc = (struct dylib_command*)cmdPtr;
+                version = dc-&gt;dylib.current_version;
+                break;
+            }
+        }
+        cmdPtr += loadCmd-&gt;cmdsize;
+    }
+
+    buffer-&gt;address = (uintptr_t)header;
+    buffer-&gt;vmAddress = imageVmAddr;
+    buffer-&gt;size = imageSize;
+    buffer-&gt;name = image_name;
+    buffer-&gt;uuid = uuid;
+    buffer-&gt;cpuType = header-&gt;cputype;
+    buffer-&gt;cpuSubType = header-&gt;cpusubtype;
+    buffer-&gt;majorVersion = version &gt;&gt; 16;
+    buffer-&gt;minorVersion = (version &gt;&gt; 8) &amp; 0xff;
+    buffer-&gt;revisionVersion = version &amp; 0xff;
+    getCrashInfo(header, buffer);
+    
+    return true;
+}
+</code></pre><p>总的来说，通过 _dyld_get_image_header 获取 image 的 header 部分。然后通过 header 位置定位到 load command，遍历 load command 的信息</p>
+<h2 id="写入crash时线程信息">写入crash时线程信息</h2>
+<p>在 crash 的时候，会suspend所有的线程，并且获取它们的基本信息。现在就要对获取到的线程进行解析：</p>
+<pre tabindex="0"><code>/// 写入crash时候所有的线程信息
+static void writeAllThreads(const KSCrashReportWriter* const writer,
+                            const char* const key,
+                            const KSCrash_MonitorContext* const crash,
+                            bool writeNotableAddresses)
+{
+    const struct KSMachineContext* const context = crash-&gt;offendingMachineContext;
+    KSThread offendingThread = ksmc_getThreadFromContext(context);
+    int threadCount = ksmc_getThreadCount(context);
+    KSMC_NEW_CONTEXT(machineContext);
+
+    // Fetch info for all threads.
+    writer-&gt;beginArray(writer, key);
+    {
+        KSLOG_DEBUG(&#34;Writing %d threads.&#34;, threadCount);
+        for(int i = 0; i &lt; threadCount; i++)
+        {
+            KSThread thread = ksmc_getThreadAtIndex(context, i);
+            if(thread == offendingThread)
+            {
+                writeThread(writer, NULL, crash, context, i, writeNotableAddresses);
+            }
+            else
+            {
+                ksmc_getContextForThread(thread, machineContext, false);
+                writeThread(writer, NULL, crash, machineContext, i, writeNotableAddresses);
+            }
+        }
+    }
+    writer-&gt;endContainer(writer);
+}
+
+
+static void writeThread(const KSCrashReportWriter* const writer,
+                        const char* const key,
+                        const KSCrash_MonitorContext* const crash,
+                        const struct KSMachineContext* const machineContext,
+                        const int threadIndex,
+                        const bool shouldWriteNotableAddresses)
+{
+    bool isCrashedThread = ksmc_isCrashedContext(machineContext);
+    KSThread thread = ksmc_getThreadFromContext(machineContext);
+    KSLOG_DEBUG(&#34;Writing thread %x (index %d). is crashed: %d&#34;, thread, threadIndex, isCrashedThread);
+
+    KSStackCursor stackCursor;
+    bool hasBacktrace = getStackCursor(crash, machineContext, &amp;stackCursor);
+
+    writer-&gt;beginObject(writer, key);
+    {
+        if(hasBacktrace)
+        {
+            /// 写入调用栈
+            writeBacktrace(writer, KSCrashField_Backtrace, &amp;stackCursor);
+        }
+        if(ksmc_canHaveCPUState(machineContext))
+        {
+            /// 写入寄存器
+            writeRegisters(writer, KSCrashField_Registers, machineContext);
+        }
+        
+        /// 写入线程index
+        writer-&gt;addIntegerElement(writer, KSCrashField_Index, threadIndex);
+        const char* name = ksccd_getThreadName(thread);
+        if(name != NULL)
+        {
+            /// 线程有名称就写入线程名称
+            writer-&gt;addStringElement(writer, KSCrashField_Name, name);
+        }
+        name = ksccd_getQueueName(thread);
+        if(name != NULL)
+        {
+            /// 写入 dispatch_queue 的名称
+            writer-&gt;addStringElement(writer, KSCrashField_DispatchQueue, name);
+        }
+        
+        /// 是否是崩溃线程
+        writer-&gt;addBooleanElement(writer, KSCrashField_Crashed, isCrashedThread);
+        writer-&gt;addBooleanElement(writer, KSCrashField_CurrentThread, thread == ksthread_self());
+        
+        /// 如果是崩溃的线程
+        if(isCrashedThread)
+        {
+            /// 将 stack （堆栈信息） 上的部分数据拷贝出来
+            writeStackContents(writer, KSCrashField_Stack, machineContext, stackCursor.state.hasGivenUp);
+            if(shouldWriteNotableAddresses)
+            {
+                /// 将通过 zombie 记录的地址拷贝出来
+                writeNotableAddresses(writer, KSCrashField_NotableAddresses, machineContext);
+            }
+        }
+    }
+    writer-&gt;endContainer(writer);
+}
+</code></pre><p>其中比较重要的是符号化调用堆栈，写入寄存器的值，以及写入 zombie 记录的信息。</p>
+<h3 id="符号化调用堆栈">符号化调用堆栈</h3>
+<p>符号化的过程是通过实际的地址找到符号表中相应的符号，再到字符串表中找到对应的字符串：</p>
+<pre tabindex="0"><code>/// 符号化调用堆栈
+static void writeBacktrace(const KSCrashReportWriter* const writer,
+                           const char* const key,
+                           KSStackCursor* stackCursor)
+{
+    writer-&gt;beginObject(writer, key);
+    {
+        writer-&gt;beginArray(writer, KSCrashField_Contents);
+        {
+            /// 循环开始,对每一层调用栈进行符号化
+            while(stackCursor-&gt;advanceCursor(stackCursor))
+            {
+                writer-&gt;beginObject(writer, NULL);
+                {
+                    /// 对调用栈符号化
+                    if(stackCursor-&gt;symbolicate(stackCursor))
+                    {
+                        /// 把符号化后的 image 名，地址，symbol 名，地址写入
+                        if(stackCursor-&gt;stackEntry.imageName != NULL)
+                        {
+                            /// 
+                            writer-&gt;addStringElement(writer, KSCrashField_ObjectName, ksfu_lastPathEntry(stackCursor-&gt;stackEntry.imageName));
+                        }
+                        /// 写入symbol object_addr 地址
+                        writer-&gt;addUIntegerElement(writer, KSCrashField_ObjectAddr, stackCursor-&gt;stackEntry.imageAddress);
+                        if(stackCursor-&gt;stackEntry.symbolName != NULL)
+                        {
+                            writer-&gt;addStringElement(writer, KSCrashField_SymbolName, stackCursor-&gt;stackEntry.symbolName);
+                        }
+                        writer-&gt;addUIntegerElement(writer, KSCrashField_SymbolAddr, stackCursor-&gt;stackEntry.symbolAddress);
+                    }
+                    writer-&gt;addUIntegerElement(writer, KSCrashField_InstructionAddr, stackCursor-&gt;stackEntry.address);
+                }
+                writer-&gt;endContainer(writer);
+            }
+        }
+        writer-&gt;endContainer(writer);
+        writer-&gt;addIntegerElement(writer, KSCrashField_Skipped, 0);
+    }
+    writer-&gt;endContainer(writer);
+}
+</code></pre><p>核心逻辑根据address获取符号名</p>
+<pre tabindex="0"><code>/// 根据 address 获取符号名
+bool ksdl_dladdr(const uintptr_t address, Dl_info* const info)
+{
+    info-&gt;dli_fname = NULL;
+    info-&gt;dli_fbase = NULL;
+    info-&gt;dli_sname = NULL;
+    info-&gt;dli_saddr = NULL;
+
+    /// 判断 address 是在第几个 image 内
+    const uint32_t idx = imageIndexContainingAddress(address);
+    if(idx == UINT_MAX)
+    {
+        return false;
+    }
+    
+    /// 获得该 image 的 header
+    const struct mach_header* header = _dyld_get_image_header(idx);
+    
+    /// 获得该 image 的基地址
+    const uintptr_t imageVMAddrSlide = (uintptr_t)_dyld_get_image_vmaddr_slide(idx);
+    
+    /// 获取 address 相对于 image 的偏移
+    const uintptr_t addressWithSlide = address - imageVMAddrSlide;
+    
+    /// 获得 segment 在虚拟内存中的基地址
+    const uintptr_t segmentBase = segmentBaseOfImageIndex(idx) + imageVMAddrSlide;
+    if(segmentBase == 0)
+    {
+        return false;
+    }
+
+    /// 获取 image 的名字
+    info-&gt;dli_fname = _dyld_get_image_name(idx);
+    
+    /// 获取 header 地址
+    info-&gt;dli_fbase = (void*)header;
+
+    // Find symbol tables and get whichever symbol is closest to the address.
+    const nlist_t* bestMatch = NULL;
+    uintptr_t bestDistance = ULONG_MAX;
+    uintptr_t cmdPtr = firstCmdAfterHeader(header);
+    if(cmdPtr == 0)
+    {
+        return false;
+    }
+    for(uint32_t iCmd = 0; iCmd &lt; header-&gt;ncmds; iCmd++)
+    {
+        const struct load_command* loadCmd = (struct load_command*)cmdPtr;
+        if(loadCmd-&gt;cmd == LC_SYMTAB)
+        {
+            
+            /// 找到 symbol table 的 load command
+            const struct symtab_command* symtabCmd = (struct symtab_command*)cmdPtr;
+            
+            /// 通过 load command 中的 offset + segment 的基地址，得到 symbol table 的实际地址
+            const nlist_t* symbolTable = (nlist_t*)(segmentBase + symtabCmd-&gt;symoff);
+            /// 找到 string table 的位置
+            const uintptr_t stringTable = segmentBase + symtabCmd-&gt;stroff;
+            
+            /// 找到最佳的符号
+            for(uint32_t iSym = 0; iSym &lt; symtabCmd-&gt;nsyms; iSym++)
+            {
+                // Skip all debug N_STAB symbols
+                if ((symbolTable[iSym].n_type &amp; N_STAB) != 0) 
+                {
+                    continue;
+                }
+
+                // If n_value is 0, the symbol refers to an external object.
+                if(symbolTable[iSym].n_value != 0)
+                {
+                    uintptr_t symbolBase = symbolTable[iSym].n_value;
+                    uintptr_t currentDistance = addressWithSlide - symbolBase;
+                    if((addressWithSlide &gt;= symbolBase) &amp;&amp;
+                       (currentDistance &lt;= bestDistance))
+                    {
+                        bestMatch = symbolTable + iSym;
+                        bestDistance = currentDistance;
+                    }
+                }
+            }
+            
+            /// 根据符号的位置找到其在 string table 中表示的字符串
+            if(bestMatch != NULL)
+            {
+                info-&gt;dli_saddr = (void*)(bestMatch-&gt;n_value + imageVMAddrSlide);
+                if(bestMatch-&gt;n_desc == 16)
+                {
+                    // This image has been stripped. The name is meaningless, and
+                    // almost certainly resolves to &#34;_mh_execute_header&#34;
+                    info-&gt;dli_sname = NULL;
+                }
+                else
+                {
+                    info-&gt;dli_sname = (char*)((intptr_t)stringTable + (intptr_t)bestMatch-&gt;n_un.n_strx);
+                    if(*info-&gt;dli_sname == &#39;_&#39;)
+                    {
+                        info-&gt;dli_sname++;
+                    }
+                }
+                break;
+            }
+        }
+        cmdPtr += loadCmd-&gt;cmdsize;
+    }
+    
+    return true;
+}
+</code></pre><p>这个过程中就完成了从地址到 image 中符号的转化</p>
+<h3 id="写入寄存器信息">写入寄存器信息</h3>
+<p>在通过 crash 获取的 context 信息中，我们可以拿到寄存器相关的信息：</p>
+<pre tabindex="0"><code>static void writeBasicRegisters(const KSCrashReportWriter* const writer,
+                                const char* const key,
+                                const struct KSMachineContext* const machineContext)
+{
+    char registerNameBuff[30];
+    const char* registerName;
+    writer-&gt;beginObject(writer, key);
+    {
+        const int numRegisters = kscpu_numRegisters();
+        for(int reg = 0; reg &lt; numRegisters; reg++)
+        {
+            /// 寄存器名字
+            registerName = kscpu_registerName(reg);
+            if(registerName == NULL)
+            {
+                snprintf(registerNameBuff, sizeof(registerNameBuff), &#34;r%d&#34;, reg);
+                registerName = registerNameBuff;
+            }
+            
+            /// 寄存器的值
+            writer-&gt;addUIntegerElement(writer, registerName,
+                                       kscpu_registerValue(machineContext, reg));
+        }
+    }
+    writer-&gt;endContainer(writer);
+}
+
+/// 获取到的寄存器
+static const char* g_registerNames[] =
+{
+    &#34;rax&#34;, &#34;rbx&#34;, &#34;rcx&#34;, &#34;rdx&#34;,
+    &#34;rdi&#34;, &#34;rsi&#34;,
+    &#34;rbp&#34;, &#34;rsp&#34;,
+    &#34;r8&#34;, &#34;r9&#34;, &#34;r10&#34;, &#34;r11&#34;, &#34;r12&#34;, &#34;r13&#34;, &#34;r14&#34;, &#34;r15&#34;,
+    &#34;rip&#34;, &#34;rflags&#34;,
+    &#34;cs&#34;, &#34;fs&#34;, &#34;gs&#34;
+};
+
+/// 根据寄存器的序号通过如下方法在 context 中获取寄存器中存储的值：
+uint64_t kscpu_registerValue(const KSMachineContext* const context, const int regNumber)
+{
+    if(regNumber &lt;= 29)
+    {
+        return context-&gt;machineContext.__ss.__x[regNumber];
+    }
+
+    switch(regNumber)
+    {
+        case 30: return context-&gt;machineContext.__ss.__fp;
+        case 31: return context-&gt;machineContext.__ss.__lr;
+        case 32: return context-&gt;machineContext.__ss.__sp;
+        case 33: return context-&gt;machineContext.__ss.__pc;
+        case 34: return context-&gt;machineContext.__ss.__cpsr;
+    }
+
+    KSLOG_ERROR(&#34;Invalid register number: %d&#34;, regNumber);
+    return 0;
+}
+</code></pre><p>寄存器的序号会根据架构arm，arm64，x86等不同返回不同的值</p>
+<h3 id="记录调用堆栈的部分信息">记录调用堆栈的部分信息</h3>
+<p>分析crash信息需要用到堆栈的内容，KSCrash提供了方法将出错线程的堆栈的部分信息拷贝出来：</p>
+<pre tabindex="0"><code>static void writeStackContents(const KSCrashReportWriter* const writer,
+                               const char* const key,
+                               const struct KSMachineContext* const machineContext,
+                               const bool isStackOverflow)
+{
+    /// 拿到 stack pointer
+    uintptr_t sp = kscpu_stackPointer(machineContext);
+    if((void*)sp == NULL)
+    {
+        return;
+    }
+
+    // 10 - 20
+    uintptr_t lowAddress = sp + (uintptr_t)(kStackContentsPushedDistance * (int)sizeof(sp) * kscpu_stackGrowDirection() * -1);
+    uintptr_t highAddress = sp + (uintptr_t)(kStackContentsPoppedDistance * (int)sizeof(sp) * kscpu_stackGrowDirection());
+    if(highAddress &lt; lowAddress)
+    {
+        uintptr_t tmp = lowAddress;
+        lowAddress = highAddress;
+        highAddress = tmp;
+    }
+    writer-&gt;beginObject(writer, key);
+    {
+        writer-&gt;addStringElement(writer, KSCrashField_GrowDirection, kscpu_stackGrowDirection() &gt; 0 ? &#34;+&#34; : &#34;-&#34;);
+        writer-&gt;addUIntegerElement(writer, KSCrashField_DumpStart, lowAddress);
+        writer-&gt;addUIntegerElement(writer, KSCrashField_DumpEnd, highAddress);
+        writer-&gt;addUIntegerElement(writer, KSCrashField_StackPtr, sp);
+        writer-&gt;addBooleanElement(writer, KSCrashField_Overflow, isStackOverflow);
+        uint8_t stackBuffer[kStackContentsTotalDistance * sizeof(sp)];
+        int copyLength = (int)(highAddress - lowAddress);
+        /// 拷贝 lowAddress 上的数据到 buffer 中
+        if(ksmem_copySafely((void*)lowAddress, stackBuffer, copyLength))
+        {
+            writer-&gt;addDataElement(writer, KSCrashField_Contents, (void*)stackBuffer, copyLength);
+        }
+        else
+        {
+            writer-&gt;addStringElement(writer, KSCrashField_Error, &#34;Stack contents not accessible&#34;);
+        }
+    }
+    writer-&gt;endContainer(writer);
+}
+</code></pre><p>通过 sp 寄存器拿到stack pointer：</p>
+<pre tabindex="0"><code>uintptr_t kscpu_stackPointer(const KSMachineContext* const context)
+{
+    return context-&gt;machineContext.__ss.__rsp;
+}
+</code></pre><pre tabindex="0"><code>#define kStackContentsPushedDistance 20
+#define kStackContentsPoppedDistance 10
+#define kStackContentsTotalDistance (kStackContentsPushedDistance + kStackContentsPoppedDistance)
+</code></pre><p>作者设置的，也就说是，拷贝栈内 20 个对象，以及刚刚出栈的 10 个对象的地址。在拿到 sp 和范围之后，就可以通过 c 的方法获取：</p>
+<pre tabindex="0"><code>static inline int copySafely(const void* restrict const src, void* restrict const dst, const int byteCount)
+{
+    vm_size_t bytesCopied = 0;
+    kern_return_t result = vm_read_overwrite(mach_task_self(),
+                                             (vm_address_t)src,
+                                             (vm_size_t)byteCount,
+                                             (vm_address_t)dst,
+                                             &amp;bytesCopied);
+    if(result != KERN_SUCCESS)
+    {
+        return 0;
+    }
+    return (int)bytesCopied;
+}
+</code></pre><h3 id="取出地址上的内存对象">取出地址上的内存对象</h3>
+<p>无论是寄存器还是堆栈，取出的都是地址。但是我们其实更需要的是对象的信息。因此，我们还需要到地址上去解析对象信息：</p>
+<pre tabindex="0"><code>static void writeNotableAddresses(const KSCrashReportWriter* const writer,
+                                  const char* const key,
+                                  const struct KSMachineContext* const machineContext)
+{
+    writer-&gt;beginObject(writer, key);
+    {
+        /// 获取 register 上的对象
+        writeNotableRegisters(writer, machineContext);
+        /// 获取 stack 上的对象
+        writeNotableStackContents(writer,
+                                  machineContext,
+                                  kStackNotableSearchBackDistance,
+                                  kStackNotableSearchForwardDistance);
+    }
+    writer-&gt;endContainer(writer);
+}
+</code></pre><p>以解析寄存器上的对象为例：</p>
+<pre tabindex="0"><code>static void writeMemoryContents(const KSCrashReportWriter* const writer,
+                                const char* const key,
+                                const uintptr_t address,
+                                int* limit)
+{
+    (*limit)--;
+    const void* object = (const void*)address;
+    writer-&gt;beginObject(writer, key);
+    {
+        writer-&gt;addUIntegerElement(writer, KSCrashField_Address, address);
+        writeZombieIfPresent(writer, KSCrashField_LastDeallocObject, address);
+        if(!writeObjCObject(writer, address, limit))
+        {
+            if(object == NULL)
+            {
+                writer-&gt;addStringElement(writer, KSCrashField_Type, KSCrashMemType_NullPointer);
+            }
+            else if(isValidString(object))
+            {
+                writer-&gt;addStringElement(writer, KSCrashField_Type, KSCrashMemType_String);
+                writer-&gt;addStringElement(writer, KSCrashField_Value, (const char*)object);
+            }
+            else
+            {
+                writer-&gt;addStringElement(writer, KSCrashField_Type, KSCrashMemType_Unknown);
+            }
+        }
+    }
+    writer-&gt;endContainer(writer);
+}
+</code></pre><p>writeObjCObject() 将地址转化为对象：</p>
+<pre tabindex="0"><code>static bool writeObjCObject(const KSCrashReportWriter* const writer,
+                            const uintptr_t address,
+                            int* limit)
+{
+#if KSCRASH_HAS_OBJC
+    const void* object = (const void*)address;
+    switch(ksobjc_objectType(object))
+    {
+        case KSObjCTypeClass:
+            writer-&gt;addStringElement(writer, KSCrashField_Type, KSCrashMemType_Class);
+            writer-&gt;addStringElement(writer, KSCrashField_Class, ksobjc_className(object));
+            return true;
+        case KSObjCTypeObject:
+        {
+            writer-&gt;addStringElement(writer, KSCrashField_Type, KSCrashMemType_Object);
+            const char* className = ksobjc_objectClassName(object);
+            writer-&gt;addStringElement(writer, KSCrashField_Class, className);
+            if(!isRestrictedClass(className))
+            {
+                switch(ksobjc_objectClassType(object))
+                {
+                    case KSObjCClassTypeString:
+                        writeNSStringContents(writer, KSCrashField_Value, address, limit);
+                        return true;
+                    case KSObjCClassTypeURL:
+                        writeURLContents(writer, KSCrashField_Value, address, limit);
+                        return true;
+                    case KSObjCClassTypeDate:
+                        writeDateContents(writer, KSCrashField_Value, address, limit);
+                        return true;
+                    case KSObjCClassTypeArray:
+                        if(*limit &gt; 0)
+                        {
+                            writeArrayContents(writer, KSCrashField_FirstObject, address, limit);
+                        }
+                        return true;
+                    case KSObjCClassTypeNumber:
+                        writeNumberContents(writer, KSCrashField_Value, address, limit);
+                        return true;
+                    case KSObjCClassTypeDictionary:
+                    case KSObjCClassTypeException:
+                        // TODO: Implement these.
+                        if(*limit &gt; 0)
+                        {
+                            writeUnknownObjectContents(writer, KSCrashField_Ivars, address, limit);
+                        }
+                        return true;
+                    case KSObjCClassTypeUnknown:
+                        if(*limit &gt; 0)
+                        {
+                            writeUnknownObjectContents(writer, KSCrashField_Ivars, address, limit);
+                        }
+                        return true;
+                }
+            }
+            break;
+        }
+        case KSObjCTypeBlock:
+            writer-&gt;addStringElement(writer, KSCrashField_Type, KSCrashMemType_Block);
+            const char* className = ksobjc_objectClassName(object);
+            writer-&gt;addStringElement(writer, KSCrashField_Class, className);
+            return true;
+        case KSObjCTypeUnknown:
+            break;
+    }
+#endif
+
+    return false;
+}
+</code></pre><p>把 address 强转为一个 object，然后判断 object 到底是 tagged pointer 还是 block 还是 OC 类型，还是自建的 Class。根据类型写入相应的信息。</p>
+<h2 id="野指针的监控">野指针的监控</h2>
+<p>获取地址对象方法中，我们要注意到一个方法 writeZombieIfPresent()。这是 KSCrash 提供的 Zombie，用于监控野指针。我们来看一下它的实现：</p>
+<pre tabindex="0"><code>static void writeZombieIfPresent(const KSCrashReportWriter* const writer,
+                                 const char* const key,
+                                 const uintptr_t address)
+{
+#if KSCRASH_HAS_OBJC
+    const void* object = (const void*)address;
+    const char* zombieClassName = kszombie_className(object);
+    if(zombieClassName != NULL)
+    {
+        writer-&gt;addStringElement(writer, key, zombieClassName);
+    }
+#endif
+}
+
+const char* kszombie_className(const void* object)
+{
+    volatile Zombie* cache = g_zombieCache;
+    if(cache == NULL || object == NULL)
+    {
+        return NULL;
+    }
+
+    Zombie* zombie = (Zombie*)cache + hashIndex(object);
+    if(zombie-&gt;object == object)
+    {
+        return zombie-&gt;className;
+    }
+    return NULL;
+}
+</code></pre><p>它的方法非常简洁。就是判断当前address上的object是否是记录过的对象。这是怎么做到的呢？g_zombieCache 又是什么呢？这就需要回到KSCrashMonitor_Zombie.c 中查看。</p>
+<p>每一个 monitor 会被调用其 setEnabled() 方法启动。Zombie 也不例外。它在 setEnabled() 中调用了 install 方法：</p>
+<pre tabindex="0"><code>static void install(void)
+{
+    unsigned cacheSize = CACHE_SIZE;
+    g_zombieHashMask = cacheSize - 1;
+    g_zombieCache = calloc(cacheSize, sizeof(*g_zombieCache));
+    if(g_zombieCache == NULL)
+    {
+        KSLOG_ERROR(&#34;Error: Could not allocate %u bytes of memory. KSZombie NOT installed!&#34;,
+              cacheSize * sizeof(*g_zombieCache));
+        return;
+    }
+
+    g_lastDeallocedException.class = objc_getClass(&#34;NSException&#34;);
+    g_lastDeallocedException.address = NULL;
+    g_lastDeallocedException.name[0] = 0;
+    g_lastDeallocedException.reason[0] = 0;
+
+    installDealloc_NSObject();
+    installDealloc_NSProxy();
+}
+</code></pre><p>根据代码，我们可以知道，它 hook 了 NSObject 以及 NSProxy 的 dealloc 方法。先调用自己的处理方法 handleDealloc() 然后再调用原来的 dealloc 方法。注意这里调用原来 dealloc 方法的实现:</p>
+<pre tabindex="0"><code>typedef void (*fn)(id,SEL); \
+fn f = (fn)g_originalDealloc_ ## CLASS; \
+f(self, _cmd); \
+</code></pre><p>handleDealloc() 方法：</p>
+<pre tabindex="0"><code>static inline void handleDealloc(const void* self)
+{
+    volatile Zombie* cache = g_zombieCache;
+    likely_if(cache != NULL)
+    {
+        Zombie* zombie = (Zombie*)cache + hashIndex(self);
+        zombie-&gt;object = self;
+        Class class = object_getClass((id)self);
+        zombie-&gt;className = class_getName(class);
+        for(; class != nil; class = class_getSuperclass(class))
+        {
+            unlikely_if(class == g_lastDeallocedException.class)
+            {
+                storeException(self);
+            }
+        }
+    }
+}
+</code></pre><p>在 install 的时候的时候创建了一个空的 Cache：</p>
+<pre tabindex="0"><code>g_zombieCache = calloc(cacheSize, sizeof(*g_zombieCache));
+</code></pre><p>在处理 dealloc 的时候，会把对象的地址放到这个 Zombie 的 cache 中。这样的作用就是对于已经销毁的对象，我们记录了一份它们的地址信息，这样以后出现野指针 crash 的时候，如果发现是 zombie 中指向的对象，那么就可以说明它被提前释放了。当然，这并不是非常准确的，因为 hash 获取 index 的方式总是会产生一定的碰撞导致对象被覆盖。当然不可否认这是一种经济有效的测试野指针的方式。作者自己在注释中说明这是一种 Poor man’s Zombie tracking XD</p>
+<pre tabindex="0"><code>/* Poor man&#39;s zombie tracking.
+ *
+ * Benefits:
+ * - Very low CPU overhead.
+ * - Low memory overhead.
+ *
+ * Limitations:
+ * - Not guaranteed to catch all zombies.
+ * - Can generate false positives or incorrect class names.
+ * - KSZombie itself must be compiled with ARC disabled. You can enable ARC in
+ *   your app, but KSZombie must be compiled in a separate library if you do.
+ */
+</code></pre>
+        </div>
+
+        
+<div class="post-archive">
+    <ul class="post-copyright">
+        <li><strong>Author: </strong><a rel="author" href="https://YuMars.github.io">YuMars</a></li>
+        <li style="word-break:break-all"><strong>Link: </strong><a href="https://YuMars.github.io/post/KSCrash%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">https://YuMars.github.io/post/KSCrash%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/</a></li>
+        <li><strong>License: </strong>This work is under a <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/">知识共享署名-非商业性使用-禁止演绎 4.0 国际许可协议</a>. Kindly fulfill the requirements of the aforementioned License when adapting or creating a derivative of this work.</li>
+    </ul>
+</div>
+<br/>
+
+
+
+        
+
+<div class="post-archive">
+    <h2>See Also</h2>
+    <ul class="listing">
+        
+        <li><a href="/post/%E5%8D%A1%E9%A1%BF%E4%BC%98%E5%8C%96%E7%9A%84%E6%96%B9%E6%A1%88/">卡顿优化的方案</a></li>
+        
+        <li><a href="/post/%E8%BD%AC%E7%94%9F%E4%B9%8BKVO_KVO%E5%86%8D%E4%BA%86%E8%A7%A3%E4%B8%80%E6%AC%A1/">转生之KVO&amp;KVO再了解一次</a></li>
+        
+        <li><a href="/post/@synchroinzed/">@synchroinzed</a></li>
+        
+        <li><a href="/post/SDWebImage%E5%BA%95%E5%B1%82%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91/">SDWebImage底层代码逻辑</a></li>
+        
+        <li><a href="/post/%E5%88%9D%E8%AF%86%E7%BA%A2%E9%BB%91%E6%A0%91/">初识红黑树</a></li>
+        
+    </ul>
+</div>
+
+
+        <div class="post-meta meta-tags">
+            
+            No tags
+            
+        </div>
+    </article>
+    
+    <div id="disqus_thread"></div>
+<script type="application/javascript">
+    window.disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "yourdiscussshortname" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+    
+    
+    <div class="post bg-white">
+      <script src="https://utteranc.es/client.js"
+            repo= "your github repo"
+            issue-term="pathname"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+      </script>
+    </div>
+    
+    
+    
+
+</div>
+
+                    <footer id="footer">
+    <div>
+        &copy; 2024 <a href="https://YuMars.github.io">YuMars的博客 By YuMars</a>
+        
+    </div>
+    <br />
+    <div>
+        <div class="github-badge">
+            <a href="https://gohugo.io/" target="_black" rel="nofollow"><span class="badge-subject">Powered by</span><span class="badge-value bg-blue">Hugo</span></a>
+        </div>
+        
+        <div class="github-badge">
+            <a href="https://github.com/flysnow-org/maupassant-hugo" target="_black"><span class="badge-subject">Theme</span><span class="badge-value bg-yellowgreen">Maupassant</span></a>
+        </div>
+    </div>
+</footer>
+
+
+    
+    
+    <script type="text/javascript">
+        window.MathJax = {
+            tex2jax: {
+                inlineMath: [['$', '$']],
+                processEscapes: true
+                }
+            };
+    </script>
+    <script src='//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src='/js/totop.js?v=0.0.0' async=""></script>
+<style type="text/css">
+div.highlight {
+    position: relative;
+    margin: 1em 0px;
+}
+
+.copy-code {
+    display: none;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(78, 78, 78, 0.8);
+    border-radius: var(--radius);
+    padding: 0 5px;
+    font: inherit;
+    user-select: none;
+    cursor: pointer;
+    border: 0;
+    --radius: 8px;
+}
+
+div.highlight:hover .copy-code,pre:hover .copy-code {
+    display: block;
+}
+
+</style>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+
+
+    <script type="text/javascript" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+
+
+
+
+    <script src='/js/douban.js'></script>
+
+                </div>
+
+                <div id="secondary">
+    <section class="widget">
+        <form id="search" action='https://YuMars.github.io/search' method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+      
+      <input type="text" name="q" maxlength="20" placeholder="Search">
+      <input type="hidden" name="sitesearch" value="https://YuMars.github.io">
+      <button type="submit" class="submit icon-search"></button>
+</form>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title">Latest articles</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://YuMars.github.io/post/KSCrash%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" title="KSCrash源码解析" target="_blank">KSCrash源码解析</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/%E5%8D%A1%E9%A1%BF%E4%BC%98%E5%8C%96%E7%9A%84%E6%96%B9%E6%A1%88/" title="卡顿优化的方案" target="_blank">卡顿优化的方案</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/%E8%BD%AC%E7%94%9F%E4%B9%8BKVO_KVO%E5%86%8D%E4%BA%86%E8%A7%A3%E4%B8%80%E6%AC%A1/" title="转生之KVO&amp;KVO再了解一次" target="_blank">转生之KVO&amp;KVO再了解一次</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/@synchroinzed/" title="@synchroinzed" target="_blank">@synchroinzed</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/SDWebImage%E5%BA%95%E5%B1%82%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91/" title="SDWebImage底层代码逻辑" target="_blank">SDWebImage底层代码逻辑</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/%E5%88%9D%E8%AF%86%E7%BA%A2%E9%BB%91%E6%A0%91/" title="初识红黑树" target="_blank">初识红黑树</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/NSNotification%E5%8F%91%E9%80%81%E6%95%B0%E9%87%8F%E4%B8%8D%E5%9B%BA%E5%AE%9A%E7%9A%84%E5%8E%9F%E5%9B%A0/" title="NSNotification发送数量不固定的原因" target="_blank">NSNotification发送数量不固定的原因</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/%E4%BB%80%E4%B9%88%E6%98%AFRunloop/" title="什么是Runloop" target="_blank">什么是Runloop</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/Block%E7%9A%84%E6%9C%AC%E8%B4%A8/" title="Block的本质" target="_blank">Block的本质</a>
+    </li>
+    
+    <li>
+        <a href="https://YuMars.github.io/post/%E4%B8%8D%E8%B0%88Mach-O%E9%83%BD%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%AE%9E%E5%AE%9E%E5%9C%A8%E5%9C%A8%E7%9A%84%E5%BF%AB%E9%80%9F%E7%98%A6%E8%BA%AB/" title="不谈Mach-O，项目中实实在在的快速瘦身" target="_blank">不谈Mach-O，项目中实实在在的快速瘦身</a>
+    </li>
+    
+</ul>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title"><a href='/categories/'>Categories</a></h3>
+<ul class="widget-list">
+    
+</ul>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title"><a href='/tags/'>Tags</a></h3>
+<div class="tagcloud">
+    
+</div>
+    </section>
+
+    
+<section class="widget">
+    <h3 class="widget-title">Links</h3>
+    <ul class="widget-list">
+        
+        <li>
+            <a target="_blank" href="https://github.com/YuMars" title="GitHub">GitHub</a>
+        </li>
+        
+    </ul>
+</section>
+
+
+    <section class="widget">
+        <h3 class="widget-title">Meta</h3>
+        <ul class="widget-list">
+            <li><a href="https://YuMars.github.io/index.xml">RSS</a></li>
+        </ul>
+    </section>
+</div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
